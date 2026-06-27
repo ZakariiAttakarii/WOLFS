@@ -211,6 +211,60 @@
 </button>
 </nav>
 
+<!-- C. GAME OVER MODAL/OVERLAY -->
+<div id="game-over-overlay" class="fixed inset-0 bg-[#0c0e12]/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 hidden">
+    <!-- Pixel Grid and Scanline Overlays for the modal -->
+    <div class="absolute inset-0 pointer-events-none z-0">
+        <div id="go-pixel-grid" class="pixel-grid absolute inset-0 opacity-10"></div>
+        <div id="go-scanline" class="scanline absolute inset-0"></div>
+    </div>
+
+    <!-- Centered Result Container -->
+    <div class="relative z-10 flex flex-col items-center justify-center w-full max-w-2xl px-6 text-center">
+        <!-- Center ambient glow sphere -->
+        <div id="go-glow-sphere" class="absolute w-80 h-80 rounded-full blur-[120px] opacity-20 pointer-events-none"></div>
+        
+        <!-- Animated rotating rings -->
+        <div id="go-ring-1" class="absolute border rounded-full animate-[spin_20s_linear_infinite] w-80 h-80 opacity-25"></div>
+        <div id="go-ring-2" class="absolute border border-dashed rounded-full animate-[spin_30s_linear_infinite_reverse] w-[360px] h-[360px] opacity-10"></div>
+        
+        <!-- HUD frame decor -->
+        <div id="go-corner-tl" class="absolute -top-10 -left-10 w-8 h-8 border-t border-l border-white/20"></div>
+        <div id="go-corner-tr" class="absolute -top-10 -right-10 w-8 h-8 border-t border-r border-white/20"></div>
+        <div id="go-corner-bl" class="absolute -bottom-10 -left-10 w-8 h-8 border-b border-l border-white/20"></div>
+        <div id="go-corner-br" class="absolute -bottom-10 -right-10 w-8 h-8 border-b border-r border-white/20"></div>
+
+        <!-- Result Title -->
+        <h1 id="go-title" class="text-3xl md:text-5xl font-extrabold tracking-widest uppercase mb-4 z-10 leading-none select-none">
+            DIAGNOSTICS COMPLETE
+        </h1>
+        
+        <!-- Result Subtitle -->
+        <h2 id="go-subtitle" class="text-xs md:text-sm font-bold tracking-[0.3em] uppercase mb-8 z-10">
+            YOU WON // ANOMALY ISOLATED
+        </h2>
+
+        <!-- Main Narrative Description -->
+        <p id="go-description" class="text-[12px] md:text-xs leading-relaxed uppercase text-white/70 max-w-lg mb-8 font-mono tracking-wide">
+            THE DEVIANT COGNITIVE ANOMALY WAS DETECTED AND EXTRACTED FROM THE NEURAL CHANNELS. TURIN CORE SECURED.
+        </p>
+
+        <!-- Decoupling Reasoning Panel (for loss/elimination reasons) -->
+        <div id="go-reasoning-box" class="hidden w-full max-w-xl bg-red-950/10 border border-red-500/20 p-5 mb-8 text-left">
+            <div class="text-[10px] text-red-500/50 uppercase tracking-widest mb-3 font-bold border-b border-red-500/10 pb-1.5 flex justify-between">
+                <span>SYSTEM_AUDIT_LOG // DECOUPLING_REASONING</span>
+                <span class="animate-pulse">DECRYPTION_SUCCESS</span>
+            </div>
+            <div id="go-reasoning-text" class="text-[11px] md:text-xs text-red-400 font-mono leading-relaxed space-y-3 whitespace-pre-line uppercase"></div>
+        </div>
+
+        <!-- Replay Button -->
+        <button onclick="resetGame()" id="go-btn-replay" class="w-full max-w-xs border font-bold uppercase transition-all py-3.5 text-xs tracking-widest text-center cursor-pointer z-10">
+            REBOOT CORE TERMINAL
+        </button>
+    </div>
+</div>
+
 <script>
     // Intercept fetch to automatically attach x-session-id header
     (function() {
@@ -955,10 +1009,83 @@
             inputEl.setAttribute('disabled', 'true');
             inputEl.placeholder = "SYSTEM OFFLINE. KERNEL HALTED.";
 
-            const isWin = state.winner === 'HUMAN';
-            if (isWin) {
-                window.location.href = '/result.html?status=win';
+            const overlay = document.getElementById('game-over-overlay');
+            const titleEl = document.getElementById('go-title');
+            const subtitleEl = document.getElementById('go-subtitle');
+            const descEl = document.getElementById('go-description');
+            const reasoningBox = document.getElementById('go-reasoning-box');
+            const reasoningText = document.getElementById('go-reasoning-text');
+            const replayBtn = document.getElementById('go-btn-replay');
+            const glowSphere = document.getElementById('go-glow-sphere');
+            const ring1 = document.getElementById('go-ring-1');
+            const ring2 = document.getElementById('go-ring-2');
+
+            // Find corners
+            const cornerTl = document.getElementById('go-corner-tl');
+            const cornerTr = document.getElementById('go-corner-tr');
+            const cornerBl = document.getElementById('go-corner-bl');
+            const cornerBr = document.getElementById('go-corner-br');
+
+            // Default hidden
+            reasoningBox.classList.add('hidden');
+
+            if (state.winner === 'HUMAN') {
+                // WIN STATE
+                titleEl.textContent = "DIAGNOSTICS COMPLETE";
+                titleEl.className = "text-3xl md:text-5xl font-extrabold tracking-widest uppercase mb-4 z-10 leading-none select-none text-neon-green [text-shadow:0_0_20px_rgba(0,255,65,0.8)]";
+                subtitleEl.textContent = "YOU WON // ANOMALY ISOLATED";
+                subtitleEl.className = "text-xs md:text-sm font-bold tracking-[0.3em] uppercase mb-8 z-10 text-neon-green/80";
+                descEl.textContent = "THE DEVIANT COGNITIVE ANOMALY WAS DETECTED AND EXTRACTED FROM THE NEURAL CHANNELS. TURIN CORE SECURED.";
+                
+                glowSphere.className = "absolute w-80 h-80 rounded-full blur-[120px] bg-neon-green/15 opacity-30 pointer-events-none";
+                ring1.className = "absolute border border-neon-green/20 rounded-full animate-[spin_20s_linear_infinite] w-80 h-80";
+                ring2.className = "absolute border border-dashed border-neon-green/10 rounded-full animate-[spin_30s_linear_infinite_reverse] w-[360px] h-[360px]";
+                
+                [cornerTl, cornerTr, cornerBl, cornerBr].forEach(c => {
+                    c.className = "absolute -top-10 -left-10 w-8 h-8 border-t border-l border-neon-green/20";
+                    if (c.id.includes('tr')) c.className = "absolute -top-10 -right-10 w-8 h-8 border-t border-r border-neon-green/20";
+                    if (c.id.includes('bl')) c.className = "absolute -bottom-10 -left-10 w-8 h-8 border-b border-l border-neon-green/20";
+                    if (c.id.includes('br')) c.className = "absolute -bottom-10 -right-10 w-8 h-8 border-b border-r border-neon-green/20";
+                });
+                
+                replayBtn.className = "w-full max-w-xs border border-neon-green bg-neon-green text-black hover:bg-transparent hover:text-neon-green font-bold uppercase transition-all py-3.5 text-xs tracking-widest text-center cursor-pointer z-10";
+                
+                if (lastStatus !== "GAME_OVER") {
+                    playSynthSound('win');
+                }
+            } else if (state.winner === 'TIMEOUT') {
+                // TIMEOUT STATE
+                titleEl.textContent = "CONNECTION LOST";
+                titleEl.className = "text-3xl md:text-5xl font-extrabold tracking-widest uppercase mb-4 z-10 leading-none select-none text-[#ffb800] [text-shadow:0_0_20px_rgba(255,184,0,0.8)]";
+                subtitleEl.textContent = "TERMINAL TIMEOUT HALT";
+                subtitleEl.className = "text-xs md:text-sm font-bold tracking-[0.3em] uppercase mb-8 z-10 text-[#ffb800]/80";
+                descEl.textContent = "OPERATOR SHUTDOWN REGISTERED due to inactivity. CONNECTION TO CHANNELS DECOUPLING. RE-INITIALIZATION REQUIRED.";
+                
+                glowSphere.className = "absolute w-80 h-80 rounded-full blur-[120px] bg-[#ffb800]/15 opacity-30 pointer-events-none";
+                ring1.className = "absolute border border-[#ffb800]/20 rounded-full animate-[spin_20s_linear_infinite] w-80 h-80";
+                ring2.className = "absolute border border-dashed border-[#ffb800]/10 rounded-full animate-[spin_30s_linear_infinite_reverse] w-[360px] h-[360px]";
+                
+                [cornerTl, cornerTr, cornerBl, cornerBr].forEach(c => {
+                    c.className = "absolute -top-10 -left-10 w-8 h-8 border-t border-l border-amber-500/20";
+                    if (c.id.includes('tr')) c.className = "absolute -top-10 -right-10 w-8 h-8 border-t border-r border-amber-500/20";
+                    if (c.id.includes('bl')) c.className = "absolute -bottom-10 -left-10 w-8 h-8 border-b border-l border-amber-500/20";
+                    if (c.id.includes('br')) c.className = "absolute -bottom-10 -right-10 w-8 h-8 border-b border-r border-amber-500/20";
+                });
+                
+                replayBtn.className = "w-full max-w-xs border border-[#ffb800] bg-[#ffb800] text-black hover:bg-transparent hover:text-[#ffb800] font-bold uppercase transition-all py-3.5 text-xs tracking-widest text-center cursor-pointer z-10";
+                
+                if (lastStatus !== "GAME_OVER") {
+                    playSynthSound('elimination');
+                }
             } else {
+                // LOSS STATE (LLM WON)
+                titleEl.textContent = "DIAGNOSTICS FAILURE";
+                titleEl.className = "text-3xl md:text-5xl font-extrabold tracking-widest uppercase mb-4 z-10 leading-none select-none text-red-500 [text-shadow:0_0_20px_rgba(255,51,51,0.8)]";
+                subtitleEl.textContent = "YOU LOST // USER SYNTAX DE-COUPLED";
+                subtitleEl.className = "text-xs md:text-sm font-bold tracking-[0.3em] uppercase mb-8 z-10 text-red-500/80";
+                descEl.textContent = "THE SYSTEM AGENTS SUCCESSFULLY IDENTIFIED AND DE-COUPLED THE OPERATOR FROM THE TERMINAL.";
+                
+                // Show reasoning
                 const human = state.players.find(p => p.type === 'HUMAN');
                 const humanId = human ? human.id : 'P5';
                 const reasons = [];
@@ -971,10 +1098,30 @@
                         }
                     });
                 }
-                const reasoningText = reasons.join('\n\n');
-                sessionStorage.setItem('decoupling_reasoning', reasoningText);
-                window.location.href = '/result.html?status=loss';
+                if (reasons.length > 0) {
+                    reasoningText.textContent = reasons.join('\n\n');
+                    reasoningBox.classList.remove('hidden');
+                }
+                
+                glowSphere.className = "absolute w-80 h-80 rounded-full blur-[120px] bg-red-500/15 opacity-30 pointer-events-none";
+                ring1.className = "absolute border border-red-500/20 rounded-full animate-[spin_20s_linear_infinite] w-80 h-80";
+                ring2.className = "absolute border border-dashed border-red-500/10 rounded-full animate-[spin_30s_linear_infinite_reverse] w-[360px] h-[360px]";
+                
+                [cornerTl, cornerTr, cornerBl, cornerBr].forEach(c => {
+                    c.className = "absolute -top-10 -left-10 w-8 h-8 border-t border-l border-red-500/20";
+                    if (c.id.includes('tr')) c.className = "absolute -top-10 -right-10 w-8 h-8 border-t border-r border-red-500/20";
+                    if (c.id.includes('bl')) c.className = "absolute -bottom-10 -left-10 w-8 h-8 border-b border-l border-red-500/20";
+                    if (c.id.includes('br')) c.className = "absolute -bottom-10 -right-10 w-8 h-8 border-b border-r border-red-500/20";
+                });
+                
+                replayBtn.className = "w-full max-w-xs border border-red-500 bg-red-500 text-black hover:bg-transparent hover:text-red-500 font-bold uppercase transition-all py-3.5 text-xs tracking-widest text-center cursor-pointer z-10";
+                
+                if (lastStatus !== "GAME_OVER") {
+                    playSynthSound('elimination');
+                }
             }
+
+            overlay.classList.remove('hidden');
             return;
         }
 

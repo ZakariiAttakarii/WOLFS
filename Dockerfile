@@ -8,7 +8,7 @@ COPY package.json package-lock.json* ./
 RUN npm install --production
 
 # Copy application files
-COPY server.js index.html gameplay.html tutorial.html result.html style.css app.js ./
+COPY server.js index.html gameplay.html tutorial.html style.css app.js ./
 COPY art ./art/
 
 # Expose default port

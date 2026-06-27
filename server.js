@@ -191,7 +191,7 @@ async function handleApi(req, res) {
     // 2. SETUP GAME
     if (req.method === 'POST' && url.pathname === '/api/game/setup') {
       const body = await readPostBody(req);
-      const humanName = body.playerName || "Operator_05";
+      const humanName = body.playerName || "TOTALLY_AI (YOU)";
       const userApiKey = body.apiKey || "";
       const customTopic = body.topic || "";
 

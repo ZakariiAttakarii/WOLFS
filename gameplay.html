@@ -236,7 +236,9 @@
             labelId: 'label-subject-01',
             labelActiveClass: 'text-neon-green terminal-glow-green',
             labelInactiveClass: 'text-neon-green/40',
-            icon: 'change_history'
+            icon: 'change_history',
+            overlayId: 'card-overlay-subject-01',
+            overlayClass: 'text-neon-green border-neon-green bg-neon-green/10'
         },
         {
             id: 'card-subject-02',
@@ -255,7 +257,9 @@
             labelId: 'label-subject-02',
             labelActiveClass: 'text-electric-blue terminal-glow-blue',
             labelInactiveClass: 'text-electric-blue/40',
-            icon: 'square'
+            icon: 'square',
+            overlayId: 'card-overlay-subject-02',
+            overlayClass: 'text-electric-blue border-electric-blue bg-electric-blue/10'
         },
         {
             id: 'card-subject-03',
@@ -274,7 +278,9 @@
             labelId: 'label-subject-03',
             labelActiveClass: 'text-hot-pink terminal-glow-pink',
             labelInactiveClass: 'text-hot-pink/40',
-            icon: 'diamond'
+            icon: 'diamond',
+            overlayId: 'card-overlay-subject-03',
+            overlayClass: 'text-hot-pink border-hot-pink bg-hot-pink/10'
         },
         {
             id: 'card-subject-04',
@@ -293,7 +299,9 @@
             labelId: 'label-subject-04',
             labelActiveClass: 'text-amber terminal-glow-amber',
             labelInactiveClass: 'text-amber/40',
-            icon: 'hexagon'
+            icon: 'hexagon',
+            overlayId: 'card-overlay-subject-04',
+            overlayClass: 'text-amber border-amber bg-amber/10'
         }
     ];
 
@@ -388,6 +396,7 @@
             const iconEl = document.getElementById(suspect.iconId);
             const footerEl = document.getElementById(suspect.footerId);
             const labelEl = document.getElementById(suspect.labelId);
+            const overlayEl = document.getElementById(suspect.overlayId);
 
             if (i === index) {
                 // Set Active state classes
@@ -395,12 +404,19 @@
                 if (iconEl) iconEl.className = `material-symbols-outlined text-4xl ${suspect.iconActiveClass}`;
                 if (footerEl) footerEl.className = `px-3 py-2 border-t ${suspect.footerActiveClass}`;
                 if (labelEl) labelEl.className = `text-[11px] font-bold ${suspect.labelActiveClass}`;
+                if (overlayEl) {
+                    overlayEl.className = `absolute top-2 right-2 text-[8px] font-black uppercase px-1.5 py-0.5 border ${suspect.overlayClass} z-10 animate-pulse`;
+                    overlayEl.classList.remove('hidden');
+                }
             } else {
                 // Set Inactive state classes
                 cardEl.className = `group relative bg-surface-container-low transition-all cursor-pointer ${suspect.inactiveClass}`;
                 if (iconEl) iconEl.className = `material-symbols-outlined text-4xl ${suspect.iconInactiveClass}`;
                 if (footerEl) footerEl.className = `px-3 py-2 border-t ${suspect.footerInactiveClass}`;
                 if (labelEl) labelEl.className = `text-[11px] font-bold ${suspect.labelInactiveClass}`;
+                if (overlayEl) {
+                    overlayEl.classList.add('hidden');
+                }
             }
         });
 
@@ -466,7 +482,7 @@
                 const setupRes = await fetch('/api/game/setup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ playerName: "Operator_05" })
+                    body: JSON.stringify({ playerName: "TOTALLY_AI (YOU)" })
                 });
                 const setupData = await setupRes.json();
                 if (setupData.success) {
@@ -607,7 +623,20 @@
 
         // Clean any residual panels or indicators
         const existingTyping = document.getElementById('typing-indicator');
-        if (existingTyping) existingTyping.remove();
+        let preserveTyping = false;
+        
+        if (state.status === "CHAT_ROUND_1" || state.status === "CHAT_ROUND_2") {
+            const activePlayer = state.players.find(p => p.id === state.activePlayerId);
+            if (activePlayer && activePlayer.type !== "HUMAN") {
+                if (existingTyping && existingTyping.getAttribute('data-player-id') === activePlayer.id) {
+                    preserveTyping = true;
+                }
+            }
+        }
+        
+        if (existingTyping && !preserveTyping) {
+            existingTyping.remove();
+        }
         
         const existingReveal = document.getElementById('reveal-panel');
         if (existingReveal) existingReveal.remove();
@@ -639,20 +668,70 @@
                     inputEl.placeholder = `SUBJECT ${activePlayer.name} IS ANALYZING SYSTEM PARAMETERS...`;
                     
                     const suspect = suspects[activeSuspectIndex];
-                    if (suspect) {
+                    if (suspect && !preserveTyping) {
                         const typingDiv = document.createElement('div');
                         typingDiv.id = 'typing-indicator';
+                        typingDiv.setAttribute('data-player-id', activePlayer.id);
                         typingDiv.className = 'space-y-2 max-w-3xl mb-6';
                         typingDiv.innerHTML = `
                             <div class="flex items-center gap-2 ${suspect.colorClass} text-[11px] font-bold tracking-widest uppercase animate-pulse">
-                                <span class="material-symbols-outlined text-[14px]">${suspect.icon}</span> ${suspect.name}
+                                <span class="material-symbols-outlined text-[14px] animate-spin">${suspect.icon}</span> ${suspect.name}
                             </div>
-                            <div class="pl-4 border-l-2 ${suspect.borderColorClass} ${suspect.colorClass} leading-relaxed italic text-[12px] opacity-60">
-                                ANALYZING DATA STREAMS...
+                            <div class="pl-4 border-l-2 ${suspect.borderColorClass} flex flex-col md:flex-row md:items-center gap-6 py-2">
+                                <!-- Visual Waveform Lines -->
+                                <div class="flex items-end gap-1 h-6 shrink-0">
+                                    <div class="w-[3px] bg-current ${suspect.colorClass} wave-bar" style="height: 100%; animation-delay: 0.1s;"></div>
+                                    <div class="w-[3px] bg-current ${suspect.colorClass} wave-bar" style="height: 60%; animation-delay: 0.3s;"></div>
+                                    <div class="w-[3px] bg-current ${suspect.colorClass} wave-bar" style="height: 80%; animation-delay: 0.5s;"></div>
+                                    <div class="w-[3px] bg-current ${suspect.colorClass} wave-bar" style="height: 40%; animation-delay: 0.2s;"></div>
+                                    <div class="w-[3px] bg-current ${suspect.colorClass} wave-bar" style="height: 70%; animation-delay: 0.4s;"></div>
+                                    <div class="w-[3px] bg-current ${suspect.colorClass} wave-bar" style="height: 90%; animation-delay: 0.6s;"></div>
+                                </div>
+                                
+                                <!-- Retro Logs block -->
+                                <div class="${suspect.colorClass} space-y-1 text-[11px] font-mono opacity-80 leading-relaxed uppercase">
+                                    <div class="flex items-center gap-2">
+                                        <span class="animate-pulse">▶</span> <span id="typing-subroutine-log">COMPILING CONTEXT VECTORS...</span>
+                                    </div>
+                                    <div class="text-[10px] text-white/50 tracking-wider">
+                                        THINK_UPTIME: <span id="uptime-count">0.5</span>s [■■■■■■■░░░] 70%
+                                    </div>
+                                </div>
                             </div>
                         `;
                         chatContainer.appendChild(typingDiv);
                         chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                        // Subroutine typing rotation effect
+                        let subIndex = 0;
+                        const subroutines = [
+                            "FETCHING COMPILER INSTRUCTIONS...",
+                            "RETRIEVING DISCUSSION LOGIC HISTORY...",
+                            "RESOLVING CONTEXT WORD MAP VECTOR...",
+                            "COMPILING SYSTEM DIALOGUE OUTPUTS..."
+                        ];
+                        
+                        const consoleInterval = setInterval(() => {
+                            const currentIndicator = document.getElementById('typing-indicator');
+                            
+                            // If typing-indicator is no longer in DOM or belongs to another player, clean up!
+                            if (!currentIndicator || currentIndicator.getAttribute('data-player-id') !== activePlayer.id) {
+                                clearInterval(consoleInterval);
+                                return;
+                            }
+                            
+                            const logEl = currentIndicator.querySelector('#typing-subroutine-log');
+                            const uptimeEl = currentIndicator.querySelector('#uptime-count');
+                            
+                            if (logEl) {
+                                subIndex = (subIndex + 1) % subroutines.length;
+                                logEl.textContent = subroutines[subIndex];
+                            }
+                            if (uptimeEl) {
+                                let currentUptime = parseFloat(uptimeEl.textContent);
+                                uptimeEl.textContent = (currentUptime + 0.4).toFixed(1);
+                            }
+                        }, 1000);
                     }
 
                     triggerLlmStep();

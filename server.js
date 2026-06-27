@@ -954,23 +954,12 @@ Cast "${llm.name}"'s vote by outputting the required JSON object.`;
 
     // 8. RESET GAME STATE
     if (req.method === 'POST' && url.pathname === '/api/game/reset') {
-      games.set(sessionId, {
-        status: "LOBBY",
-        topic: "",
-        round: 1,
-        maxRounds: gameState.maxRounds || 3,
-        activePlayerIndex: 0,
-        spokenThisRound: [],
-        interjectedThisRound: [],
-        nextBid: null,
-        players: [],
-        messages: [],
-        votes: {},
-        suspicion: {},
-        eliminatedId: null,
-        winner: null,
-        configApiKey: gameState.configApiKey // Preserve the entered API key so they don't retype it
-      });
+      const apiKey = gameState.configApiKey;
+      const maxRounds = gameState.maxRounds || 3;
+      games.delete(sessionId);
+      const newState = getOrCreateGameState(sessionId);
+      newState.configApiKey = apiKey;
+      newState.maxRounds = maxRounds;
       res.end(JSON.stringify({ success: true }));
       return;
     }

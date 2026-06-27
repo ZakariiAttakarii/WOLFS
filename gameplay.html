@@ -708,6 +708,47 @@ HARD_RESET
     let isRequestingStep = false;
     let isSteppingVotes = false;
 
+    // Vote-timer: keep a local deadline synced to the server's reported remaining
+    // time and tick it down once a second so the display is smooth between polls.
+    let timerDeadline = null;
+    let timerTickInterval = null;
+
+    function renderTimerValue() {
+        const el = document.getElementById('vote-timer-value');
+        if (!el || timerDeadline === null) return;
+        const remaining = Math.max(0, timerDeadline - Date.now());
+        const totalSec = Math.ceil(remaining / 1000);
+        const m = Math.floor(totalSec / 60);
+        const s = totalSec % 60;
+        el.textContent = `${m}:${String(s).padStart(2, '0')}`;
+        const wrap = document.getElementById('vote-timer');
+        if (wrap) {
+            // Go red in the final 30s as a pressure cue.
+            const danger = remaining <= 30000;
+            wrap.classList.toggle('text-neon-green', !danger);
+            wrap.classList.toggle('terminal-glow-green', !danger);
+            wrap.classList.toggle('text-red-500', danger);
+            wrap.classList.toggle('animate-pulse', danger);
+        }
+    }
+
+    function updateVoteTimer(timeRemaining) {
+        const wrap = document.getElementById('vote-timer');
+        if (timeRemaining === null || timeRemaining === undefined) {
+            timerDeadline = null;
+            if (timerTickInterval) { clearInterval(timerTickInterval); timerTickInterval = null; }
+            if (wrap) { wrap.classList.add('hidden'); wrap.classList.remove('flex'); }
+            return;
+        }
+        if (wrap) { wrap.classList.remove('hidden'); wrap.classList.add('flex'); }
+        // Resync to the server clock on each poll (tolerate small drift).
+        timerDeadline = Date.now() + timeRemaining;
+        renderTimerValue();
+        if (!timerTickInterval) {
+            timerTickInterval = setInterval(renderTimerValue, 1000);
+        }
+    }
+
     async function fetchGameState() {
         try {
             const res = await fetch('/api/game/state');
@@ -754,6 +795,9 @@ HARD_RESET
         if (headerEl) {
             headerEl.textContent = headerText;
         }
+
+        // Discussion countdown — sync to the server clock, tick smoothly client-side.
+        updateVoteTimer(state.status === "CHAT" ? state.timeRemaining : null);
 
         // 1. Render Subject Cards Status (Eliminated or Active)
         const humanPlayer = state.players.find(p => p.type === "HUMAN");

@@ -24,16 +24,17 @@ const ai = new GoogleGenAI({
 
 // Set up random topics for the game
 const RANDOM_TOPICS = [
-  "Explain quantum computing to a 10-year-old.",
   "Should pineapple be allowed on pizza? Defend your stance with strong logical reasoning.",
   "Compare Vim vs. VS Code. Which is superior and why?",
   "Describe the taste of water in a highly descriptive and sensory manner.",
   "If a tree falls in a forest and no one is around to hear it, does it make a sound?",
-  "Explain the difference between REST APIs and GraphQL like I am five.",
   "What is the most beautiful programming language and why?",
   "Write a step-by-step recipe for making a cup of tea.",
-  "Explain how the Internet works in three short, clear paragraphs.",
-  "If you could only use one search algorithm for the rest of your life, would you choose Binary Search or Linear Search? Why?"
+  "What is your absolute favorite color, and what does it say about your personality?",
+  "If you could have any superpower for a day, what would it be and how would you use it?",
+  "Would you rather travel 100 years into the past or 100 years into the future? Explain why.",
+  "Cats or dogs? Provide a highly compelling argument for your preference.",
+  "What is your ultimate comfort food and why does it bring you so much joy?"
 ];
 
 

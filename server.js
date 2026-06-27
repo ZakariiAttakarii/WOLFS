@@ -85,7 +85,7 @@ async function callGemini(prompt, systemInstruction) {
   const isJson = systemInstruction.includes("JSON");
   
   const response = await ai.models.generateContent({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.5-flash',
     contents: prompt,
     config: {
       systemInstruction: systemInstruction,
@@ -148,7 +148,7 @@ function advanceTurn() {
 // API Routes Router
 async function handleApi(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.setHeader('Content-Type', 'application/json');
 
   try {
     // 1. GET GAME STATE
@@ -228,7 +228,7 @@ async function handleApi(req, res) {
 
       const currentPlayer = gameState.players[gameState.activePlayerIndex];
       if (!currentPlayer || currentPlayer.type !== "HUMAN") {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.statusCode = 400;
         res.end(JSON.stringify({ error: "It is not the human's turn to speak." }));
         return;
       }
@@ -254,7 +254,7 @@ async function handleApi(req, res) {
       const currentPlayer = gameState.players[gameState.activePlayerIndex];
       
       if (!currentPlayer) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.statusCode = 400;
         res.end(JSON.stringify({ error: "No active player speaking turn." }));
         return;
       }
@@ -309,7 +309,7 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
         res.end(JSON.stringify({ success: true, message: `Generative response logged for ${currentPlayer.name}` }));
       } catch (err) {
         console.error("Gemini API execution error:", err);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.statusCode = 500;
         res.end(JSON.stringify({ error: `Gemini API invocation failed: ${err.message}` }));
       }
       return;
@@ -323,7 +323,7 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
 
       const humanPlayer = gameState.players.find(p => p.type === "HUMAN");
       if (!humanPlayer || humanPlayer.isEliminated) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.statusCode = 400;
         res.end(JSON.stringify({ error: "Human player is not in active game." }));
         return;
       }
@@ -344,7 +344,7 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
       // Check if human has voted first
       const humanPlayer = gameState.players.find(p => p.type === "HUMAN");
       if (humanPlayer && !humanPlayer.isEliminated && !gameState.votes[humanPlayer.id]) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.statusCode = 400;
         res.end(JSON.stringify({ error: "Please cast your vote before the LLMs submit theirs." }));
         return;
       }
@@ -476,7 +476,7 @@ Cast your vote by outputting the required JSON object.`;
     // 7. CONTINUE AFTER REVEAL (Moves game from REVEAL back to CHAT_ROUND_1 for a new topic)
     if (req.method === 'POST' && url.pathname === '/api/game/continue') {
       if (gameState.status !== "REVEAL") {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.statusCode = 400;
         res.end(JSON.stringify({ error: "Can only advance from REVEAL state." }));
         return;
       }
@@ -520,12 +520,12 @@ Cast your vote by outputting the required JSON object.`;
     }
 
     // Unhandled API Endpoint
-    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.statusCode = 404;
     res.end(JSON.stringify({ error: "Endpoint not found" }));
 
   } catch (err) {
     console.error("API Router Error: ", err);
-    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.statusCode = 500;
     res.end(JSON.stringify({ error: err.message || "Internal Server API Error" }));
   }
 }

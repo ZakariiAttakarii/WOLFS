@@ -122,28 +122,17 @@ function formatHistoryForLLM(gameState, activeRoundOnly = false) {
   return filtered.map(m => `[${m.senderName}] (Round ${m.round}): "${m.text}"`).join("\n\n");
 }
 
-// Get list of active player names
-function getActivePlayersList(gameState, excludeId) {
-  return gameState.players
-    .filter(p => !p.isEliminated && p.id !== excludeId)
-    .map(p => `ID: "${p.id}", Name: "${p.name}"`)
-    .join("\n");
-}
-
 // Fallback automated vote for an individual LLM player
 function castFallbackVote(gameState, llm) {
   const remainingTargets = gameState.players.filter(p => !p.isEliminated && p.id !== llm.id);
   const fallbackTarget = remainingTargets[Math.floor(Math.random() * remainingTargets.length)];
   const targetId = fallbackTarget ? fallbackTarget.id : llm.id;
-  const targetName = fallbackTarget ? fallbackTarget.name : "UNKNOWN";
   const reasoning = "[SYSTEM BACKUP] API call timed out or failed to parse. Casting automated diagnostic flag.";
 
   gameState.votes[llm.id] = {
     targetId: targetId,
     reasoning: reasoning
   };
-
-
 }
 
 // Process the Turn Queue
@@ -407,15 +396,10 @@ Choose one of the other players' Round 1 responses. You MUST write an aggressive
         return;
       }
 
-      const targetPlayer = gameState.players.find(p => p.id === targetId);
-      const targetName = targetPlayer ? targetPlayer.name : "UNKNOWN";
-
       gameState.votes[humanPlayer.id] = {
         targetId: targetId,
         reasoning: reasoning
       };
-
-
 
       res.end(JSON.stringify({ success: true }));
       return;

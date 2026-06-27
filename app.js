@@ -962,7 +962,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const distance = 2.4;
         const scale = 11;
         const px = Math.floor(width / 2 + (x2 * scale) / (z2 + distance) * 2);
-        const py = Math.floor(height / 2 + (y2 * scale) / (z2 + distance));
+        const py = Math.floor(height / 2 + (y1 * scale) / (z2 + distance));
         
         projected.push([px, py]);
       });

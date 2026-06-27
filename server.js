@@ -587,13 +587,6 @@ Cast "${nextVotingLlm.name}"'s vote by outputting the required JSON object.`;
       res.end(JSON.stringify({ success: true }));
       return;
     }
-    // 9. TIMEOUT / FORCE GAME OVER
-    if (req.method === 'POST' && url.pathname === '/api/game/timeout') {
-      gameState.status = "GAME_OVER";
-      gameState.winner = "TIMEOUT";
-      res.end(JSON.stringify({ success: true, status: gameState.status, winner: gameState.winner }));
-      return;
-    }
 
     // 8. RESET GAME STATE
     if (req.method === 'POST' && url.pathname === '/api/game/reset') {

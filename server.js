@@ -389,7 +389,7 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
       return;
     }
 
-    // 6. PROCESS LLM VOTES (Runs all LLM votes in a single batch API call and reveals the outcome)
+    // 6. PROCESS LLM VOTES (Runs one LLM vote at a time sequentially, and aggregates when everyone has voted)
     if (req.method === 'POST' && url.pathname === '/api/game/step-llm-votes') {
       if (gameState.status !== "VOTING") {
         res.statusCode = 400;
@@ -416,15 +416,15 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
       gameState.isProcessingVotes = true;
 
       try {
-        const votingLLMs = activeLLMs.filter(llm => !gameState.votes[llm.id]);
+        const nextVotingLlm = activeLLMs.find(llm => !gameState.votes[llm.id]);
 
-        if (votingLLMs.length > 0) {
+        if (nextVotingLlm) {
           const systemInstruction = `You are playing "The Werewolf Matrix", the reverse Turing test game.
-Your task is to coordinate and cast votes simultaneously for all active AI players:
-${votingLLMs.map(llm => `- "${llm.name}" (ID: "${llm.id}")`).join("\n")}
+Your task is to cast a single vote for the AI player:
+- "${nextVotingLlm.name}" (ID: "${nextVotingLlm.id}")
 
-Each AI player must independently select a suspect player ID they believe is most likely to be the Human Werewolf.
-AI players CANNOT vote for themselves.
+You must select a suspect player ID you believe is most likely to be the Human Werewolf.
+You CANNOT vote for yourself ("${nextVotingLlm.id}").
 
 Look for these Human Werewolf indicators in the logs:
 1. Low-quality formatting (lack of typical markdown headers or bullet points).
@@ -433,24 +433,19 @@ Look for these Human Werewolf indicators in the logs:
 4. Writing messages that are exceptionally short or lacking the detailed explanatory structure of standard LLMs.
 
 TASK:
-Output a single JSON object containing the decision/vote for each active AI player in the following exact schema:
+Output a single JSON object containing the decision/vote for "${nextVotingLlm.name}" in the exact schema:
 {
-  "votes": {
-    "AI_PLAYER_ID_1": {
-      "suspectId": "PLAYER_ID_HERE",
-      "reasoning": "A concise explanation of why this AI suspects this player based on their writing style."
-    },
-    ...
-  }
+  "suspectId": "PLAYER_ID_HERE",
+  "reasoning": "A concise explanation (strictly under 150 characters) of why \"${nextVotingLlm.name}\" suspects this player based on their writing style."
 }`;
 
           const prompt = `Here is the discussion history:
 ${formatHistoryForLLM()}
 
-Active Players to choose from:
-${gameState.players.filter(p => !p.isEliminated).map(p => `ID: "${p.id}", Name: "${p.name}"`).join("\n")}
+Active Players to choose from (excluding yourself):
+${gameState.players.filter(p => !p.isEliminated && p.id !== nextVotingLlm.id).map(p => `ID: "${p.id}", Name: "${p.name}"`).join("\n")}
 
-Cast votes for all active AI players by outputting the required JSON object.`;
+Cast "${nextVotingLlm.name}"'s vote by outputting the required JSON object.`;
 
           try {
             const geminiResponseText = await callGemini(prompt, systemInstruction);
@@ -461,32 +456,39 @@ Cast votes for all active AI players by outputting the required JSON object.`;
             }
 
             const parsedResult = JSON.parse(cleanJsonText);
-            if (parsedResult && parsedResult.votes) {
-              votingLLMs.forEach(llm => {
-                const voteObj = parsedResult.votes[llm.id];
-                if (voteObj && voteObj.suspectId) {
-                  // Ensure target is active and not themselves
-                  const targetActive = gameState.players.find(p => !p.isEliminated && p.id === voteObj.suspectId && p.id !== llm.id);
-                  if (targetActive) {
-                    gameState.votes[llm.id] = {
-                      targetId: voteObj.suspectId,
-                      reasoning: voteObj.reasoning || "Diagnostic consensus matching."
-                    };
-                    return;
-                  }
-                }
-                castFallbackVote(llm);
-              });
-            } else {
-              throw new Error("Invalid batch votes response format.");
+            if (parsedResult && parsedResult.suspectId) {
+              const targetActive = gameState.players.find(p => !p.isEliminated && p.id === parsedResult.suspectId && p.id !== nextVotingLlm.id);
+              if (targetActive) {
+                const targetName = targetActive.name;
+                const reasoning = parsedResult.reasoning || "Diagnostic anomaly detected.";
+                
+                gameState.votes[nextVotingLlm.id] = {
+                  targetId: parsedResult.suspectId,
+                  reasoning: reasoning
+                };
+
+                gameState.messages.push({
+                  id: `M_${Date.now()}`,
+                  playerId: nextVotingLlm.id,
+                  senderName: nextVotingLlm.name,
+                  text: `▲ [VOTE CAST] AUDIT FLAG PLACED ON NODE: ${targetName}. REASON: "${reasoning}"`,
+                  round: gameState.round
+                });
+
+                res.end(JSON.stringify({ success: true, allVoted: false, voterName: nextVotingLlm.name }));
+                return;
+              }
             }
+            throw new Error("Invalid single vote response format.");
           } catch (err) {
-            console.error("Error gathering batch LLM votes:", err);
-            votingLLMs.forEach(llm => castFallbackVote(llm));
+            console.error(`Error gathering vote for ${nextVotingLlm.name}:`, err);
+            castFallbackVote(nextVotingLlm);
+            res.end(JSON.stringify({ success: true, allVoted: false, voterName: nextVotingLlm.name }));
+            return;
           }
         }
 
-        // All votes have been cast! Aggregate and determine elimination
+        // NO nextVotingLlm found -> All votes have been cast! Aggregate and determine elimination
         const voteCounts = {};
         gameState.players.forEach(p => { if (!p.isEliminated) voteCounts[p.id] = 0; });
 
@@ -531,7 +533,7 @@ Cast votes for all active AI players by outputting the required JSON object.`;
           gameState.status = "REVEAL";
         }
 
-        res.end(JSON.stringify({ success: true, eliminatedId: gameState.eliminatedId, status: gameState.status, winner: gameState.winner }));
+        res.end(JSON.stringify({ success: true, allVoted: true, eliminatedId: gameState.eliminatedId, status: gameState.status, winner: gameState.winner }));
       } catch (err) {
         console.error("Core error in step-llm-votes handler: ", err);
         res.statusCode = 500;

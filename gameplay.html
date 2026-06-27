@@ -522,6 +522,7 @@
     let lastActivePlayerId = null;
     let renderedMessageCount = 0;
     let isRequestingStep = false;
+    let isSteppingVotes = false;
 
     async function fetchGameState() {
         try {
@@ -594,8 +595,21 @@
                                     buttonEl.textContent = "VOTED";
                                     buttonEl.className = "border border-error bg-error text-black rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider pointer-events-none";
                                 } else {
-                                    buttonEl.textContent = "VOTE";
-                                    buttonEl.className = "border border-white/10 text-white/20 bg-transparent rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider pointer-events-none opacity-30";
+                                    // Check if this AI has already voted
+                                    const aiVoted = state.votes && state.votes[playerInState.id];
+                                    const activeLLMs = state.players.filter(p => p.type === "LLM" && !p.isEliminated);
+                                    const nextVotingLlm = activeLLMs.find(llm => !state.votes[llm.id]);
+
+                                    if (aiVoted) {
+                                        buttonEl.textContent = "VOTED";
+                                        buttonEl.className = "border border-neon-green/30 text-neon-green/80 bg-neon-green/5 rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider pointer-events-none opacity-80";
+                                    } else if (nextVotingLlm && playerInState.id === nextVotingLlm.id) {
+                                        buttonEl.textContent = "VOTING...";
+                                        buttonEl.className = "border border-amber/50 text-amber bg-amber/5 rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider pointer-events-none animate-pulse";
+                                    } else {
+                                        buttonEl.textContent = "QUEUED";
+                                        buttonEl.className = "border border-white/5 text-white/20 bg-transparent rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider pointer-events-none opacity-30";
+                                    }
                                 }
                             } else {
                                 buttonEl.disabled = false;
@@ -791,7 +805,17 @@
         } else if (state.status === "VOTING") {
             setActiveSpeaker(-1);
             inputEl.setAttribute('disabled', 'true');
-            inputEl.placeholder = "DECIPHER THREAT CONFORMS. CAST YOUR VOTE ABOVE...";
+            if (hasVoted) {
+                const activeLLMs = state.players.filter(p => p.type === "LLM" && !p.isEliminated);
+                const nextVotingLlm = activeLLMs.find(llm => !state.votes[llm.id]);
+                if (nextVotingLlm) {
+                    inputEl.placeholder = `SUBJECT ${nextVotingLlm.name} IS EXECUTING VOTE COMPILATION...`;
+                } else {
+                    inputEl.placeholder = "ALL VOTES CAST. AGGREGATING RESULTS...";
+                }
+            } else {
+                inputEl.placeholder = "DECIPHER THREAT CONFORMS. CAST YOUR VOTE ABOVE...";
+            }
         } else if (state.status === "REVEAL") {
             setActiveSpeaker(-1);
             inputEl.setAttribute('disabled', 'true');
@@ -840,62 +864,69 @@
             inputEl.setAttribute('disabled', 'true');
             inputEl.placeholder = "SYSTEM OFFLINE. KERNEL HALTED.";
 
-            const isTimeout = state.winner === "TIMEOUT";
-            const isLlmWin = state.winner === "LLM";
-            
-            const winnerBorder = isTimeout ? "border-amber-500" : (isLlmWin ? "border-error" : "border-neon-green");
-            const winnerBg = isTimeout ? "bg-amber-500/5" : (isLlmWin ? "bg-error/5" : "bg-neon-green/5");
-            const winnerTextClass = isTimeout ? "text-amber-500" : (isLlmWin ? "text-error" : "text-neon-green");
-            
-            let winnerTitle = "SYSTEM_COMPROMISED // INTRUDER_DOMINANCE_ACHIEVED";
-            if (isTimeout) {
-                winnerTitle = "CONNECTION_LOST // TERMINAL_TIMEOUT_HALT";
-            } else if (isLlmWin) {
-                winnerTitle = "SYSTEM_INTEGRITY_RESTORED // WEREWOLF_DETOC_SUCCESSFUL";
-            }
-            
-            let winnerDesc = "CONGRATULATIONS. YOU HAVE SUCCESSFULLY BLENDED IN AND SUBVERTED THE SYNTHETIC KERNEL VILLAGE. THE WEREWOLF REIGNS SUPREME.";
-            if (isTimeout) {
-                winnerDesc = "THE OPERATOR FAILED TO TRANSMIT COMPILATION PARAMETERS WITHIN THE ASSIGNED TIMEFRAME. SECURITY DE-COUPLING PROTOCOLS AUTOMATICALLY ENFORCED. OPERATOR TERMINATED.";
-            } else if (isLlmWin) {
-                winnerDesc = "THE SYSTEM HAS UNMASKED AND DE-COUPLED THE ORGANIC OPERATOR INTRUDER (YOU). THE AI VILLAGERS PRESERVED THE INTEGRITY OF THE NETWORKS.";
-            }
-
-            let votesHtml = "";
-            Object.entries(state.votes || {}).forEach(([voterId, voteDetail]) => {
-                const voter = state.players.find(p => p.id === voterId);
-                const target = state.players.find(p => p.id === voteDetail.targetId);
-                if (voter && target) {
-                    votesHtml += `<div class="text-[11px] mt-1 text-white/60">
-                        &gt; [${voter.name}] VOTED FOR [${target.name}]. <span class="italic text-error/70">"${voteDetail.reasoning}"</span>
-                    </div>`;
+            const isWin = state.winner === 'HUMAN';
+            if (isWin) {
+                window.location.href = '/result.html?status=win';
+            } else {
+                const human = state.players.find(p => p.type === 'HUMAN');
+                const humanId = human ? human.id : 'P5';
+                const reasons = [];
+                if (state.votes) {
+                    Object.entries(state.votes).forEach(([voterId, voteObj]) => {
+                        if (voteObj.targetId === humanId && voteObj.reasoning) {
+                            const voter = state.players.find(p => p.id === voterId);
+                            const voterName = voter ? voter.name : voterId;
+                            reasons.push(`${voterName}: ${voteObj.reasoning}`);
+                        }
+                    });
                 }
-            });
+                const reasoningText = reasons.join('\n\n');
+                sessionStorage.setItem('decoupling_reasoning', reasoningText);
+                window.location.href = '/result.html?status=loss';
+            }
+            return;
+        }
 
-            const gameoverDiv = document.createElement('div');
-            gameoverDiv.id = 'gameover-panel';
-            gameoverDiv.className = `space-y-2 max-w-2xl mb-6 p-6 border-2 ${winnerBorder} ${winnerBg}`;
-            gameoverDiv.innerHTML = `
-                <div class="${winnerTextClass} text-sm font-bold tracking-widest uppercase">${winnerTitle}</div>
-                <div class="pl-4 border-l-2 ${winnerBorder} ${winnerTextClass}/80 leading-relaxed uppercase text-[12px] mt-2">
-                    ${winnerDesc}<br><br>
-                    FINAL VOTES LOG:<br>
-                    ${votesHtml || '<div class="text-[11px] text-white/40">&gt; NO VOTES REGISTERED.</div>'}
-                </div>
-                <div class="mt-6 flex gap-4 pt-2">
-                    <button onclick="resetGame()" class="border border-primary/30 text-primary bg-primary/5 hover:bg-primary hover:text-black transition-all rounded-sm px-4 py-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer">
-                        INITIALIZE_SYSTEM_REBOOT (PLAY AGAIN)
-                    </button>
-                </div>
-            `;
-            chatContainer.appendChild(gameoverDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            if (lastStatus !== "GAME_OVER") {
-                if (isTimeout || isLlmWin) {
-                    playSynthSound('elimination');
-                } else {
-                    playSynthSound('win');
+        // 4. Sequential Voting Stepping Loop
+        if (state.status === "VOTING" && hasVoted) {
+            const activeLLMs = state.players.filter(p => p.type === "LLM" && !p.isEliminated);
+            const nextVotingLlm = activeLLMs.find(llm => !state.votes[llm.id]);
+            
+            if (nextVotingLlm) {
+                if (!isSteppingVotes) {
+                    isSteppingVotes = true;
+                    setTimeout(async () => {
+                        try {
+                            const res = await fetch('/api/game/step-llm-votes', { method: 'POST' });
+                            const data = await res.json();
+                            if (data.success) {
+                                await fetchGameState();
+                            }
+                        } catch (err) {
+                            console.error("Error stepping LLM vote:", err);
+                        } finally {
+                            isSteppingVotes = false;
+                        }
+                    }, 2000); // 2 second pacing delay
+                }
+            } else {
+                // All active LLMs have voted, but the server status is still "VOTING".
+                // Trigger the final step-llm-votes call to aggregate, eliminate, and transition.
+                if (!isSteppingVotes) {
+                    isSteppingVotes = true;
+                    setTimeout(async () => {
+                        try {
+                            const res = await fetch('/api/game/step-llm-votes', { method: 'POST' });
+                            const data = await res.json();
+                            if (data.success) {
+                                await fetchGameState();
+                            }
+                        } catch (err) {
+                            console.error("Error finalizing votes:", err);
+                        } finally {
+                            isSteppingVotes = false;
+                        }
+                    }, 1500);
                 }
             }
         }
@@ -989,9 +1020,6 @@
                 if (!currentGameState.votes) currentGameState.votes = {};
                 currentGameState.votes[humanPlayer.id] = { targetId: playerInState.id, reasoning: reasoning };
                 updateUI(currentGameState);
-
-                // Cast all LLM votes and proceed
-                await stepLlmVotes();
             } else {
                 alert("Vote submission failed: " + data.error);
                 await fetchGameState(); // Sync and reset UI

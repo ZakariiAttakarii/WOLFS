@@ -110,9 +110,12 @@
 <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle,rgba(0,255,65,0.4)_1px,transparent_1px)] bg-[size:8px_8px]"></div>
 <span id="icon-subject-01" class="material-symbols-outlined text-4xl text-neon-green terminal-glow-green">change_history</span>
 </div>
-<div id="footer-subject-01" class="px-3 py-2 border-t border-neon-green/20 bg-neon-green/5">
+<div id="footer-subject-01" class="px-3 py-2 border-t border-neon-green/20 bg-neon-green/5 flex justify-between items-center">
+<div>
 <div class="text-[8px] text-neon-green/60 leading-none">KAICHENG</div>
 <div id="label-subject-01" class="text-[11px] font-bold text-neon-green terminal-glow-green">SUBJECT_01</div>
+</div>
+<button onclick="voteForSubject(0); event.stopPropagation();" class="border border-neon-green/30 text-neon-green/60 bg-neon-green/5 hover:bg-neon-green hover:text-black hover:border-neon-green transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer">VOTE</button>
 </div>
 </div>
 <!-- Inactive Suspect: Subject 02 -->
@@ -120,9 +123,12 @@
 <div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
 <span id="icon-subject-02" class="material-symbols-outlined text-4xl text-electric-blue/40">square</span>
 </div>
-<div id="footer-subject-02" class="px-3 py-2 border-t border-white/5">
+<div id="footer-subject-02" class="px-3 py-2 border-t border-white/5 flex justify-between items-center">
+<div>
 <div class="text-[8px] text-white/30 leading-none">HAIREN</div>
 <div id="label-subject-02" class="text-[11px] font-bold text-electric-blue/60">SUBJECT_02</div>
+</div>
+<button onclick="voteForSubject(1); event.stopPropagation();" class="border border-electric-blue/30 text-electric-blue/60 bg-electric-blue/5 hover:bg-electric-blue hover:text-black hover:border-electric-blue transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer">VOTE</button>
 </div>
 </div>
 <!-- Inactive Suspect: Subject 03 -->
@@ -130,9 +136,12 @@
 <div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
 <span id="icon-subject-03" class="material-symbols-outlined text-4xl text-hot-pink/40">diamond</span>
 </div>
-<div id="footer-subject-03" class="px-3 py-2 border-t border-white/5">
+<div id="footer-subject-03" class="px-3 py-2 border-t border-white/5 flex justify-between items-center">
+<div>
 <div class="text-[8px] text-white/30 leading-none">SHERRAI</div>
 <div id="label-subject-03" class="text-[11px] font-bold text-hot-pink/60">SUBJECT_03</div>
+</div>
+<button onclick="voteForSubject(2); event.stopPropagation();" class="border border-hot-pink/30 text-hot-pink/60 bg-hot-pink/5 hover:bg-hot-pink hover:text-black hover:border-hot-pink transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer">VOTE</button>
 </div>
 </div>
 <!-- Inactive Suspect: Subject 04 -->
@@ -140,9 +149,12 @@
 <div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
 <span id="icon-subject-04" class="material-symbols-outlined text-4xl text-amber/40">hexagon</span>
 </div>
-<div id="footer-subject-04" class="px-3 py-2 border-t border-white/5">
+<div id="footer-subject-04" class="px-3 py-2 border-t border-white/5 flex justify-between items-center">
+<div>
 <div class="text-[8px] text-white/30 leading-none">KAIZUKI</div>
 <div id="label-subject-04" class="text-[11px] font-bold text-amber/60">SUBJECT_04</div>
+</div>
+<button onclick="voteForSubject(3); event.stopPropagation();" class="border border-amber/30 text-amber/60 bg-amber/5 hover:bg-amber hover:text-black hover:border-amber transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer">VOTE</button>
 </div>
 </div>
 </div>
@@ -219,8 +231,8 @@
             iconActiveClass: 'text-neon-green terminal-glow-green',
             iconInactiveClass: 'text-neon-green/40',
             footerId: 'footer-subject-01',
-            footerActiveClass: 'border-neon-green/20 bg-neon-green/5',
-            footerInactiveClass: 'border-white/5 bg-transparent',
+            footerActiveClass: 'border-neon-green/20 bg-neon-green/5 flex justify-between items-center',
+            footerInactiveClass: 'border-white/5 bg-transparent flex justify-between items-center',
             labelId: 'label-subject-01',
             labelActiveClass: 'text-neon-green terminal-glow-green',
             labelInactiveClass: 'text-neon-green/40',
@@ -243,8 +255,8 @@
             iconActiveClass: 'text-electric-blue terminal-glow-blue',
             iconInactiveClass: 'text-electric-blue/40',
             footerId: 'footer-subject-02',
-            footerActiveClass: 'border-electric-blue/20 bg-electric-blue/5',
-            footerInactiveClass: 'border-white/5 bg-transparent',
+            footerActiveClass: 'border-electric-blue/20 bg-electric-blue/5 flex justify-between items-center',
+            footerInactiveClass: 'border-white/5 bg-transparent flex justify-between items-center',
             labelId: 'label-subject-02',
             labelActiveClass: 'text-electric-blue terminal-glow-blue',
             labelInactiveClass: 'text-electric-blue/40',
@@ -267,8 +279,8 @@
             iconActiveClass: 'text-hot-pink terminal-glow-pink',
             iconInactiveClass: 'text-hot-pink/40',
             footerId: 'footer-subject-03',
-            footerActiveClass: 'border-hot-pink/20 bg-hot-pink/5',
-            footerInactiveClass: 'border-white/5 bg-transparent',
+            footerActiveClass: 'border-hot-pink/20 bg-hot-pink/5 flex justify-between items-center',
+            footerInactiveClass: 'border-white/5 bg-transparent flex justify-between items-center',
             labelId: 'label-subject-03',
             labelActiveClass: 'text-hot-pink terminal-glow-pink',
             labelInactiveClass: 'text-hot-pink/40',
@@ -291,8 +303,8 @@
             iconActiveClass: 'text-amber terminal-glow-amber',
             iconInactiveClass: 'text-amber/40',
             footerId: 'footer-subject-04',
-            footerActiveClass: 'border-amber/20 bg-amber/5',
-            footerInactiveClass: 'border-white/5 bg-transparent',
+            footerActiveClass: 'border-amber/20 bg-amber/5 flex justify-between items-center',
+            footerInactiveClass: 'border-white/5 bg-transparent flex justify-between items-center',
             labelId: 'label-subject-04',
             labelActiveClass: 'text-amber terminal-glow-amber',
             labelInactiveClass: 'text-amber/40',
@@ -413,6 +425,41 @@
         }, 500);
 
         // Auto-scroll chat
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // Vote confirmation handler showing terminal-style feedback
+    function voteForSubject(index) {
+        const target = suspects[index];
+        const chatContainer = document.getElementById('chat-container');
+        if (!chatContainer) return;
+        
+        // Native audio pitch sweep feedback
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(950, audioCtx.currentTime + 0.15);
+            gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        } catch(e) {}
+
+        const voteDiv = document.createElement('div');
+        voteDiv.className = 'space-y-2 max-w-2xl mb-6';
+        
+        voteDiv.innerHTML = `
+            <div class="text-error text-[11px] font-bold tracking-widest uppercase">AUDIT_DE_COUPLING_SEQUENCE</div>
+            <div class="pl-4 border-l-2 border-error text-error/80 leading-relaxed uppercase">
+                VOTE CAST FOR <span class="font-bold underline text-white">${target.name}</span>. SYSTEM INTEGRITY VERIFYING TARGET CONFORMITY...
+            </div>
+        `;
+        chatContainer.appendChild(voteDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 

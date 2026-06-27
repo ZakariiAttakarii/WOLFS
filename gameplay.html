@@ -1091,7 +1091,7 @@ HARD_RESET
             if (nextVotingLlm) {
                 if (!isSteppingVotes) {
                     isSteppingVotes = true;
-                    setTimeout(async () => {
+                    (async () => {
                         try {
                             const res = await fetch('/api/game/step-llm-votes', { method: 'POST' });
                             const data = await res.json();
@@ -1103,14 +1103,14 @@ HARD_RESET
                         } finally {
                             isSteppingVotes = false;
                         }
-                    }, 300); // Snappy 300ms delay to keep UI fluid
+                    })();
                 }
             } else {
                 // All active LLMs have voted, but the server status is still "VOTING".
                 // Trigger the final step-llm-votes call to aggregate, eliminate, and transition.
                 if (!isSteppingVotes) {
                     isSteppingVotes = true;
-                    setTimeout(async () => {
+                    (async () => {
                         try {
                             const res = await fetch('/api/game/step-llm-votes', { method: 'POST' });
                             const data = await res.json();
@@ -1122,7 +1122,7 @@ HARD_RESET
                         } finally {
                             isSteppingVotes = false;
                         }
-                    }, 200); // 200ms final compilation delay
+                    })();
                 }
             }
         }
@@ -1132,23 +1132,21 @@ HARD_RESET
         lastActivePlayerId = state.activePlayerId;
     }
 
-    function triggerLlmStep() {
+    async function triggerLlmStep() {
         if (isRequestingStep) return;
         isRequestingStep = true;
         
-        setTimeout(async () => {
-            try {
-                const res = await fetch('/api/game/step-llm', { method: 'POST' });
-                const data = await res.json();
-                if (data.success) {
-                    await fetchGameState();
-                }
-            } catch (err) {
-                console.error("Error stepping LLM:", err);
-            } finally {
-                isRequestingStep = false;
+        try {
+            const res = await fetch('/api/game/step-llm', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                await fetchGameState();
             }
-        }, 300); // Snappy 300ms turn delay for maximum snappiness
+        } catch (err) {
+            console.error("Error stepping LLM:", err);
+        } finally {
+            isRequestingStep = false;
+        }
     }
 
     async function submitQuery() {

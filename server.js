@@ -143,13 +143,7 @@ function castFallbackVote(gameState, llm) {
     reasoning: reasoning
   };
 
-  gameState.messages.push({
-    id: `M_${Date.now()}`,
-    playerId: llm.id,
-    senderName: llm.name,
-    text: `▲ [VOTE CAST] ${targetName}. REASON: "${reasoning}"`,
-    round: gameState.round
-  });
+
 }
 
 // Process the Turn Queue
@@ -425,13 +419,7 @@ Choose one of the other players' Round 1 responses. You MUST write an aggressive
         reasoning: reasoning
       };
 
-      gameState.messages.push({
-        id: `M_${Date.now()}`,
-        playerId: humanPlayer.id,
-        senderName: humanPlayer.name,
-        text: `▲ [VOTE CAST] ${targetName}. REASON: "${reasoning}"`,
-        round: gameState.round
-      });
+
 
       res.end(JSON.stringify({ success: true }));
       return;
@@ -515,13 +503,7 @@ Cast "${nextVotingLlm.name}"'s vote by outputting the required JSON object.`;
                   reasoning: reasoning
                 };
 
-                gameState.messages.push({
-                  id: `M_${Date.now()}`,
-                  playerId: nextVotingLlm.id,
-                  senderName: nextVotingLlm.name,
-                  text: `▲ [VOTE CAST] ${targetName}. REASON: "${reasoning}"`,
-                  round: gameState.round
-                });
+
 
                 res.end(JSON.stringify({ success: true, allVoted: false, voterName: nextVotingLlm.name }));
                 return;

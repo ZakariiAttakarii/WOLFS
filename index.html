@@ -1,55 +1,170 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Antigravity & Cloud Run</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-</head>
-<body>
-  <div class="glass-container">
-    <div class="header">
-      <div class="logo">🚀</div>
-      <h1>Cloud Run Deployed!</h1>
-      <p class="subtitle">Built and provisioned autonomously by Antigravity</p>
-    </div>
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>REVERSE TURING: WEREWOLF - KERNEL v1.0.4</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        @keyframes flicker {
+            0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% { opacity: 1; }
+            20%, 21.999%, 63%, 63.999%, 65%, 69.999% { opacity: 0.6; }
+        }
+        .flicker-animation {
+            animation: flicker 3s infinite;
+        }
+        .scanline {
+            background: linear-gradient(to bottom, rgba(0, 255, 65, 0) 50%, rgba(0, 255, 65, 0.05) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 100;
+        }
+        .pixel-grid {
+            background-image: radial-gradient(#00FF41 0.5px, transparent 0.5px);
+            background-size: 20px 20px;
+            opacity: 0.1;
+        }
+        .terminal-glow {
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+        }
+        .ascii-cube {
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.1;
+            white-space: pre;
+            transform: perspective(1000px) rotateX(15deg) rotateY(15deg);
+            animation: rotateCube 10s infinite linear;
+        }
+        @keyframes rotateCube {
+            0% { transform: perspective(1000px) rotateX(0deg) rotateY(0deg); }
+            100% { transform: perspective(1000px) rotateX(360deg) rotateY(360deg); }
+        }
+        body {
+            background-color: #000000;
+            color: #00FF41;
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#00FF41",
+                        "on-primary": "#000000",
+                        "surface": "#000000",
+                        "outline": "#00FF41",
+                        "background": "#000000",
+                        "surface-variant": "#002005",
+                        "on-surface": "#00FF41"
+                    },
+                    "spacing": {
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px"
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/css"></style><style type="text/css"></style></head>
+<body class="min-h-screen overflow-hidden selection:bg-primary selection:text-on-primary">
+<!-- Status Bar (Kernel v1.0.4) -->
 
-    <div class="card">
-      <div class="status-indicator">
-        <span class="pulse-dot"></span>
-        <span class="status-text">Service is Live</span>
-      </div>
+<!-- Secondary Nav / Top Bar -->
 
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="label">Platform</span>
-          <span class="value">Google Cloud Run</span>
+<!-- Background layers -->
+<div class="fixed inset-0 pointer-events-none">
+<div class="pixel-grid absolute inset-0"></div>
+<div class="scanline absolute inset-0"></div>
+<!-- HUD Corners -->
+<div class="absolute top-4 left-4 w-8 h-8 border-t border-l border-primary/50"></div>
+<div class="absolute top-4 right-4 w-8 h-8 border-t border-r border-primary/50"></div>
+<div class="absolute bottom-4 left-4 w-8 h-8 border-b border-l border-primary/50"></div>
+<div class="absolute bottom-4 right-4 w-8 h-8 border-b border-r border-primary/50"></div>
+</div>
+<main class="relative z-10 flex flex-col items-center justify-center min-h-screen px-margin-mobile pt-24">
+<!-- Title Section -->
+<div class="text-center mb-12">
+<h1 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 terminal-glow">
+            REVERSE TURING:<br>
+<span class="text-primary flicker-animation">[WEREWOLF_PROTO]</span>
+</h1>
+<div class="inline-block border border-primary/30 px-3 py-1">
+<p class="text-[10px] tracking-[0.4em] uppercase">Locate. Human. Protect. Network.</p>
+</div>
+</div>
+<!-- Center Graphic: ASCII Data Cube -->
+<div class="relative mb-16 flex items-center justify-center group">
+<div class="absolute inset-0 bg-primary/5 blur-[80px] rounded-full group-hover:bg-primary/10 transition-colors"></div>
+<div class="ascii-cube text-[8px] md:text-[10px] leading-tight text-primary/80 opacity-90 select-none">
+     ___________________
+    /                  /|
+   /                  / |
+  /__________________/  |
+ |                  |   |
+ |   [DATA_STREAM]  |   |
+ |   010110101010   |   |
+ |   PROCESS_74X    |   |
+ |   READY_STATUS   |   |
+ |__________________|  /
+ |                  | /
+ |__________________|/
         </div>
-        <div class="info-item">
-          <span class="label">Stack</span>
-          <span class="value">Raw HTML, CSS & Vanilla JS</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Framework</span>
-          <span class="value">None (Zero Dependencies)</span>
-        </div>
-      </div>
+<!-- Decorative frame -->
+<div class="absolute -inset-10 border border-primary/10 rounded-full animate-[spin_20s_linear_infinite]"></div>
+<div class="absolute -inset-14 border border-dashed border-primary/5 rounded-full animate-[spin_30s_linear_infinite_reverse]"></div>
+</div>
+<!-- Terminal Action Grid -->
+<div class="w-full grid grid-cols-1 gap-6 mx-auto md:grid-cols-2 max-w-2xl">
+<!-- START TEST -->
+<button class="group relative p-8 border border-primary bg-black hover:bg-primary/10 transition-all duration-300 flex flex-col items-center gap-4 active:translate-y-0.5 justify-center">
 
-      <div class="interactive-section">
-        <h3>Interactive Demo</h3>
-        <p>This button is powered by a raw JavaScript listener file:</p>
-        <button id="vibe-btn" class="btn">Vibe Check</button>
-        <div id="vibe-message" class="message-box hidden"></div>
-      </div>
-    </div>
+<span class="material-symbols-outlined text-4xl">keyboard_double_arrow_right</span>
+<span class="text-xl font-bold tracking-widest">START_INIT</span>
+<div class="w-full h-px bg-primary/20 mt-2"></div>
 
-    <div class="footer">
-      <p>Continuous Deployment via Antigravity Agentic Platform</p>
-    </div>
-  </div>
-  <script src="app.js"></script>
-</body>
-</html>
+</button>
+<!-- TUTORIAL -->
+<button class="group relative p-8 border border-primary/40 bg-black hover:border-primary hover:bg-primary/5 transition-all duration-300 flex flex-col items-center gap-4 justify-center">
+
+<span class="material-symbols-outlined text-4xl">menu_book</span>
+<span class="text-xl font-bold tracking-widest">TUTORIAL</span>
+<div class="w-full h-px bg-primary/10 mt-2"></div>
+
+</button>
+<!-- ARCHIVES -->
+
+</div>
+<!-- Data Stream Footer -->
+<div class="mt-12 flex flex-wrap justify-center gap-x-12 gap-y-2 text-[9px] text-primary/40 uppercase tracking-widest">
+
+
+
+
+</div>
+</main>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Simple clock for the status bar
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0];
+            const clockEl = document.getElementById('clock');
+            if (clockEl) clockEl.textContent = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Mouse hover interactions for terminal lines
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            btn.addEventListener('mouseenter', () => {
+                // Subtle terminal glitch sound effect would go here
+                console.log("Terminal_Interaction: Focus_Gained");
+            });
+        });
+    });
+</script>
+
+
+</body></html>

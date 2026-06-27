@@ -316,25 +316,6 @@ HARD_RESET
     let time = 120; // Start with 2 minutes
     const display = document.getElementById('countdown');
     
-    function isTimerActive() {
-        if (!currentGameState) return false;
-        
-        // Timer active during chat rounds if it is the human player's turn
-        if (currentGameState.status === "CHAT_ROUND_1" || currentGameState.status === "CHAT_ROUND_2") {
-            const activePlayer = currentGameState.players.find(p => p.id === currentGameState.activePlayerId);
-            return activePlayer && activePlayer.type === "HUMAN";
-        }
-        
-        // Timer active during voting if the human hasn't voted yet
-        if (currentGameState.status === "VOTING") {
-            const humanPlayer = currentGameState.players.find(p => p.type === "HUMAN");
-            const hasVoted = humanPlayer && currentGameState.votes && currentGameState.votes[humanPlayer.id];
-            return !hasVoted;
-        }
-        
-        return false;
-    }
-
     async function handleTimeout() {
         try {
             console.warn("Operator timeout reached. Triggering terminal security shutdown...");
@@ -347,16 +328,8 @@ HARD_RESET
         }
     }
     
-    // Countdown Timer
+    // Countdown Timer - starts immediately on load and runs unconditionally
     setInterval(() => {
-        if (!isTimerActive()) {
-            if (time !== 120) {
-                time = 120;
-                display.textContent = "02:00";
-            }
-            return;
-        }
-        
         if (time <= 0) return;
         time--;
         const mins = Math.floor(time / 60);

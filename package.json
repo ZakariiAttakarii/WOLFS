@@ -1,0 +1,10 @@
+{
+  "name": "simple-cloudrun-app",
+  "version": "1.0.0",
+  "description": "Simplest possible Cloud Run static server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}

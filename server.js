@@ -286,7 +286,7 @@ Your goal is to blend in completely as a normal, helpful, high-quality AI assist
 Do NOT mention the game, suspects, or voting yet.`;
 
         prompt = `The discussion topic selected is: "${gameState.topic}".
-Write your response to this topic. Do NOT write more than 280 characters. Write only your response.`;
+Write your response to this topic. Do NOT write more than 280 characters (strictly under 300 characters). Write only your response.`;
 
       } else {
         // Round 2: Critique or respond to previous player statements
@@ -299,17 +299,23 @@ Do NOT directly accuse anyone in this chat message. Keep your suspicion secret u
 ${formatHistoryForLLM()}
 
 Your name in the chat is "${currentPlayer.name}". 
-Choose one of the other players' Round 1 responses and comment on it, critique it, or add to it. Keep your comment concise (under 100 words).`;
+Choose one of the other players' Round 1 responses and comment on it, critique it, or add to it. Keep your comment concise (must be strictly under 300 characters).`;
       }
 
       try {
-        const text = await callGemini(prompt, systemInstruction);
+        let text = await callGemini(prompt, systemInstruction);
+        text = text.trim();
+        
+        // Safety guard to guarantee output is strictly under 300 characters
+        if (text.length >= 300) {
+          text = text.substring(0, 297) + "...";
+        }
 
         gameState.messages.push({
           id: `M_${Date.now()}`,
           playerId: currentPlayer.id,
           senderName: currentPlayer.name,
-          text: text.trim(),
+          text: text,
           round: gameState.round
         });
 

@@ -53,8 +53,10 @@ function getOrCreateGameState(sessionId) {
       round: 1,
       maxRounds: 3, // Number of discussion rounds before voting (configurable, >= 2)
       activePlayerIndex: 0, // Index of whose turn it is to speak
+      spokenThisRound: [], // Player ids who have already taken their turn this round
+      nextBid: null, // Winning bid of the upcoming speaker (for display)
       players: [], // Array of { id, name, type, isEliminated }
-      messages: [], // Array of { id, playerId, senderName, text, round, action, targetName }
+      messages: [], // Array of { id, playerId, senderName, text, round, action, targetName, bid }
       votes: {}, // Map of { voterId: { targetId, reasoning } }
       suspicion: {}, // Map of { voterId: { targetId: score } } — persists across rounds
       eliminatedId: null,
@@ -159,6 +161,27 @@ const ACTION_SCHEMA = {
   required: ["action", "speech"]
 };
 
+// Bidding schema: before each discussion turn the agents privately bid 0-4 for
+// the right to speak next (Werewolf Arena mechanic). Highest bidder gets the
+// floor, so an accused player can bid 4 and immediately defend itself.
+const BID_SCHEMA = {
+  type: "object",
+  properties: {
+    bids: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          bid: { type: "integer" }
+        },
+        required: ["name", "bid"]
+      }
+    }
+  },
+  required: ["bids"]
+};
+
 // Direct API call to Gemini using @google/genai with Vertex AI
 async function callGemini(prompt, systemInstruction, responseSchema = null) {
   const isJson = responseSchema || systemInstruction.includes("JSON");
@@ -254,31 +277,120 @@ function castFallbackVote(gameState, llm) {
   };
 }
 
-// Process the Turn Queue
-function advanceTurn(gameState) {
+// Heuristic bid 0-4 for a player wanting the floor. Used for the human player
+// (who can't be prompted to bid) and as the fallback when the LLM bid call
+// fails. Looks only at messages since this player last spoke.
+function computeBid(gameState, player) {
+  if (gameState.round < 2) return 1; // opening round: uniform → array order
+  const minRound = gameState.round - 1;
+  let mentioned = false;
+  for (let i = gameState.messages.length - 1; i >= 0; i--) {
+    const m = gameState.messages[i];
+    if (m.round < minRound) break;
+    if (m.playerId === player.id) break; // reached their own last turn
+    if ((m.action === "accuse" || m.action === "question") && m.targetName === player.name) {
+      return 4; // directly addressed → must respond
+    }
+    if (m.targetName === player.name || (m.text && m.text.includes(player.name))) {
+      mentioned = true;
+    }
+  }
+  if (mentioned) return 3;
+  const table = gameState.suspicion[player.id] || {};
+  const maxSus = Object.values(table).reduce((a, b) => Math.max(a, Number(b)), 0);
+  if (maxSus >= 0.6) return 2; // holds a strong read it wants to voice
+  return 1;
+}
+
+// One batched Gemini call returning each LLM candidate's bid 0-4 for the next turn.
+async function getLlmBids(gameState, llmCandidates) {
+  const systemInstruction = `You are the turn-scheduler for "The Werewolf Matrix", a reverse Turing game where AI villagers hunt a hidden human.
+Each AI villager privately bids 0-4 for the right to speak NEXT, by how urgently they need the floor right now:
+4 = was just accused or directly questioned and must respond
+3 = strongly wants to press a specific point or accusation immediately
+2 = has a concrete, specific contribution
+1 = only a general thought
+0 = nothing to add, content to observe this turn
+Bid honestly on behalf of EACH listed villager from their current position in the discussion.`;
+
+  const prompt = `Discussion so far:
+${formatHistoryForLLM(gameState)}
+
+Bid 0-4 for the right to speak next for each of these villagers: ${llmCandidates.map(p => p.name).join(", ")}
+Output JSON: { "bids": [ { "name": "...", "bid": 0-4 }, ... ] }`;
+
+  const raw = await callGemini(prompt, systemInstruction, BID_SCHEMA);
+  let clean = raw.trim();
+  if (clean.startsWith("```")) clean = clean.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+  const parsed = JSON.parse(clean);
+  const map = {};
+  (parsed.bids || []).forEach(b => {
+    const v = parseInt(b.bid, 10);
+    if (b.name && isFinite(v)) map[b.name] = Math.max(0, Math.min(4, v));
+  });
+  return map;
+}
+
+// Picks the next speaker among candidates by bid (ties → array order). LLMs bid
+// via the model; the human bids via the heuristic. Returns { id, bid }.
+async function selectSpeakerByBid(gameState, candidates) {
+  if (gameState.round < 2 || candidates.length === 1) {
+    // Opening round (uniform) or no real choice → keep array order, no bid call.
+    return { id: candidates[0].id, bid: gameState.round < 2 ? null : computeBid(gameState, candidates[0]) };
+  }
+
+  const llmCandidates = candidates.filter(p => p.type === "LLM");
+  let llmBids = {};
+  if (llmCandidates.length > 0) {
+    try {
+      llmBids = await getLlmBids(gameState, llmCandidates);
+    } catch (err) {
+      console.error("Bid call failed, falling back to heuristic bids:", err);
+    }
+  }
+
+  let best = null;
+  let bestBid = -1;
+  for (const p of candidates) {
+    const bid = (p.type === "LLM" && llmBids[p.name] != null)
+      ? llmBids[p.name]
+      : computeBid(gameState, p);
+    if (bid > bestBid) { bestBid = bid; best = p; }
+  }
+  return { id: best.id, bid: bestBid };
+}
+
+// Advances the turn: marks who just spoke, then bids to choose the next speaker.
+// Each active player still speaks exactly once per round; bidding only decides
+// the ORDER within the round (and which round-2+ speaker jumps in first).
+async function advanceTurn(gameState) {
   const activePlayers = gameState.players.filter(p => !p.isEliminated);
   if (activePlayers.length === 0) return;
 
-  // Find index of current player in the active players list
-  let currentActiveIndex = activePlayers.findIndex(p => p.id === gameState.players[gameState.activePlayerIndex]?.id);
-  
-  if (currentActiveIndex === -1 || currentActiveIndex >= activePlayers.length - 1) {
-    // End of the current round's turn queue.
-    if (gameState.round < gameState.maxRounds) {
-      // Advance to the next discussion round, back to the first active speaker.
-      gameState.round += 1;
-      const firstActive = activePlayers[0];
-      gameState.activePlayerIndex = gameState.players.findIndex(p => p.id === firstActive.id);
-    } else {
-      // All discussion rounds done — move to voting.
-      gameState.status = "VOTING";
-      gameState.activePlayerIndex = -1; // No active speaking turn
-    }
-  } else {
-    // Advance to next active player
-    const nextActive = activePlayers[currentActiveIndex + 1];
-    gameState.activePlayerIndex = gameState.players.findIndex(p => p.id === nextActive.id);
+  const justSpoke = gameState.players[gameState.activePlayerIndex];
+  if (justSpoke && !gameState.spokenThisRound.includes(justSpoke.id)) {
+    gameState.spokenThisRound.push(justSpoke.id);
   }
+
+  let candidates = activePlayers.filter(p => !gameState.spokenThisRound.includes(p.id));
+
+  if (candidates.length === 0) {
+    // Everyone has spoken this round.
+    if (gameState.round < gameState.maxRounds) {
+      gameState.round += 1;
+      gameState.spokenThisRound = [];
+      candidates = activePlayers; // all bid afresh for the new round's opener
+    } else {
+      gameState.status = "VOTING";
+      gameState.activePlayerIndex = -1;
+      gameState.nextBid = null;
+      return;
+    }
+  }
+
+  const sel = await selectSpeakerByBid(gameState, candidates);
+  gameState.activePlayerIndex = gameState.players.findIndex(p => p.id === sel.id);
+  gameState.nextBid = sel.bid; // attached to that player's next message for display
 }
 
 // API Routes Router
@@ -365,6 +477,8 @@ async function handleApi(req, res) {
       gameState.status = "CHAT";
       gameState.round = 1;
       gameState.activePlayerIndex = 0; // Starts with first player in shuffled order
+      gameState.spokenThisRound = [];
+      gameState.nextBid = null;
       gameState.messages = [];
       gameState.votes = {};
       gameState.suspicion = {};
@@ -393,11 +507,12 @@ async function handleApi(req, res) {
         playerId: currentPlayer.id,
         senderName: currentPlayer.name,
         text: text,
-        round: gameState.round
+        round: gameState.round,
+        bid: gameState.nextBid
       });
 
-      // Move to next player
-      advanceTurn(gameState);
+      // Bid for and move to the next speaker
+      await advanceTurn(gameState);
 
       res.end(JSON.stringify({ success: true }));
       return;
@@ -540,10 +655,11 @@ Pick ONE action and write your public "speech" (strictly under 140 characters, i
           text: speech,
           round: gameState.round,
           action: action,
-          targetName: targetName
+          targetName: targetName,
+          bid: gameState.nextBid
         });
 
-        advanceTurn(gameState);
+        await advanceTurn(gameState);
         res.end(JSON.stringify({ success: true, message: `Action '${action}' logged for ${currentPlayer.name}` }));
         return;
       }
@@ -559,11 +675,12 @@ Pick ONE action and write your public "speech" (strictly under 140 characters, i
           text: text,
           round: gameState.round,
           action: "opening",
-          targetName: null
+          targetName: null,
+          bid: gameState.nextBid
         });
 
-        // Advance queue
-        advanceTurn(gameState);
+        // Bid for and advance to the next speaker
+        await advanceTurn(gameState);
 
         res.end(JSON.stringify({ success: true, message: `Generative response logged for ${currentPlayer.name}` }));
       } catch (err) {
@@ -769,6 +886,8 @@ Cast "${llm.name}"'s vote by outputting the required JSON object.`;
       gameState.round = 1;
       gameState.status = "CHAT";
       gameState.activePlayerIndex = 0; // Starts from first player in standard array
+      gameState.spokenThisRound = [];
+      gameState.nextBid = null;
 
       // Find first non-eliminated player to start
       while (gameState.players[gameState.activePlayerIndex]?.isEliminated) {
@@ -787,6 +906,8 @@ Cast "${llm.name}"'s vote by outputting the required JSON object.`;
         round: 1,
         maxRounds: gameState.maxRounds || 3,
         activePlayerIndex: 0,
+        spokenThisRound: [],
+        nextBid: null,
         players: [],
         messages: [],
         votes: {},

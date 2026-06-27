@@ -434,7 +434,13 @@ HARD_RESET
         };
         const cls = styles[msg.action] || styles.observe;
         const arrow = msg.targetName ? ` → ${msg.targetName}` : '';
-        return `<span class="ml-1 px-1.5 py-0.5 border rounded-sm text-[8px] font-black tracking-wider ${cls}">${msg.action.toUpperCase()}${arrow}</span>`;
+        // Bid chip: shows the 0-4 bid that won this speaker the floor (4 = urgent jump-in).
+        let bidChip = '';
+        if (typeof msg.bid === 'number') {
+            const bcls = msg.bid >= 4 ? 'text-error border-error/60 bg-error/10' : 'text-white/55 border-white/20 bg-white/5';
+            bidChip = `<span class="px-1.5 py-0.5 border rounded-sm text-[8px] font-black tracking-wider ${bcls}">⚡BID ${msg.bid}</span> `;
+        }
+        return `${bidChip}<span class="px-1.5 py-0.5 border rounded-sm text-[8px] font-black tracking-wider ${cls}">${msg.action.toUpperCase()}${arrow}</span>`;
     }
 
     // Native Synth Audio System using Web Audio API

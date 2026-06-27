@@ -332,7 +332,7 @@ Do NOT directly accuse anyone in this chat message. Keep your suspicion secret u
 ${formatHistoryForLLM(gameState)}
 
 Your name in the chat is "${currentPlayer.name}". 
-Choose one of the other players' Round 1 responses and comment on it, critique it, or add to it. Keep your comment concise (must be strictly under 300 characters).`;
+Choose one of the other players' Round 1 responses and comment on it, critique it, or add to it. Do NOT write more than 280 characters (strictly under 300 characters).`;
       }
 
       try {

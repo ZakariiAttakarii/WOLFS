@@ -90,76 +90,83 @@
 <!-- TopAppBar -->
 <header class="fixed top-0 w-full z-50 bg-[#0c0e12]/80 border-b border-white/10 flex justify-between items-center px-margin-mobile h-12 md:px-margin-desktop backdrop-blur-md">
 <div class="flex items-center gap-4">
-<span class="text-xs font-bold tracking-[0.2em] uppercase terminal-glow-green flicker-animation text-neon-green">PROJECT<br></span>
+<span class="text-xs font-bold tracking-[0.2em] uppercase terminal-glow-green flicker-animation text-neon-green">PROJECT_TURIN // KERNEL STATUS: INITIALIZING // ROUND 1<br></span>
 </div>
 <div class="flex items-center gap-6">
 <div class="flex items-center gap-3">
 <span class="text-[9px] text-error uppercase tracking-widest flicker-animation">TIMEOUT_IN</span>
-<span class="text-sm font-bold tabular-nums text-error animate-pulse" id="countdown">02:28</span>
+<span class="text-sm font-bold tabular-nums text-error animate-pulse" id="countdown">03:00</span>
 </div>
 </div>
 </header>
 <!-- Main Content Area -->
 <main class="flex-1 mt-12 pb-20 md:pb-0 flex flex-col overflow-hidden relative z-10">
-<section class="flex-1 p-4 md:p-8 flex flex-col gap-6 max-w-6xl mx-auto w-full min-h-0 overflow-hidden">
-<!-- Suspect Modules (Top Row) -->
-<div class="grid grid-cols-4 gap-4">
+<section class="flex-1 p-4 md:p-8 grid grid-cols-[auto_1fr] gap-6 max-w-full mx-auto w-full h-full overflow-hidden">
+<div class="flex flex-col w-48 overflow-y-auto custom-scrollbar gap-2" id="subject-sidebar">
 <!-- Active Suspect: Subject 01 -->
-<div id="card-subject-01" onclick="setActiveSpeaker(0)" class="group relative bg-surface-container-low border-[4px] border-neon-green shadow-[0_0_15px_rgba(0,255,65,0.3)] transition-all cursor-pointer">
+<div id="card-subject-01" onclick="setActiveSpeaker(0)" class="group relative bg-surface-container-low border-[4px] border-neon-green shadow-[0_0_15px_rgba(0,255,65,0.3)] transition-all cursor-pointer w-full">
 <div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
 <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle,rgba(0,255,65,0.4)_1px,transparent_1px)] bg-[size:8px_8px]"></div>
 <span id="icon-subject-01" class="material-symbols-outlined text-4xl text-neon-green terminal-glow-green">change_history</span>
+<div class="absolute top-2 left-2 border border-neon-green/30 px-1 py-0.5 text-[8px] bg-black text-neon-green">PROBE: 98%</div>
 </div>
-<div id="footer-subject-01" class="px-3 py-2 border-t border-neon-green/20 bg-neon-green/5 flex flex-col gap-1">
+<div id="footer-subject-01" class="px-3 py-1 border-t border-neon-green/20 bg-neon-green/5 flex flex-col gap-1">
 <div class="flex items-center justify-between w-full">
-<div class="text-[9px] font-bold text-neon-green/60 uppercase tracking-wider leading-none">LLM_01</div>
+<div class="text-[8px] text-neon-green/60 leading-none">LLM_01</div>
 <button onclick="voteForSubject(0); event.stopPropagation();" class="border border-neon-green/30 text-neon-green/60 bg-neon-green/5 hover:bg-neon-green hover:text-black hover:border-neon-green transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer">VOTE</button>
 </div>
 <div id="label-subject-01" class="text-[11px] font-bold text-neon-green terminal-glow-green">KAICHENG</div>
 </div>
 </div>
+
 <!-- Inactive Suspect: Subject 02 -->
-<div id="card-subject-02" onclick="setActiveSpeaker(1)" class="group relative bg-surface-container-low border border-electric-blue/20 opacity-50 hover:opacity-70 transition-all cursor-pointer">
+<div id="card-subject-02" onclick="setActiveSpeaker(1)" class="group relative bg-surface-container-low border border-electric-blue/20 opacity-50 hover:opacity-70 transition-all cursor-pointer w-full">
 <div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
 <span id="icon-subject-02" class="material-symbols-outlined text-4xl text-electric-blue/40">square</span>
+<div class="absolute top-2 left-2 border border-white/10 px-1 py-0.5 text-[8px] bg-black text-white/40">PROBE: 12%</div>
 </div>
-<div id="footer-subject-02" class="px-3 py-2 border-t border-white/5 flex flex-col gap-1">
+<div id="footer-subject-02" class="px-3 py-1 border-t border-white/5 flex flex-col gap-1">
 <div class="flex items-center justify-between w-full">
-<div class="text-[9px] font-bold text-white/30 uppercase tracking-wider leading-none">LLM_02</div>
+<div class="text-[8px] text-white/30 leading-none">LLM_02</div>
 <button onclick="voteForSubject(1); event.stopPropagation();" class="border border-electric-blue/30 text-electric-blue/60 bg-electric-blue/5 hover:bg-electric-blue hover:text-black hover:border-electric-blue transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer">VOTE</button>
 </div>
 <div id="label-subject-02" class="text-[11px] font-bold text-electric-blue/60">HAIREN</div>
 </div>
 </div>
+
 <!-- Inactive Suspect: Subject 03 -->
-<div id="card-subject-03" onclick="setActiveSpeaker(2)" class="group relative bg-surface-container-low border border-hot-pink/20 opacity-50 hover:opacity-70 transition-all cursor-pointer">
+<div id="card-subject-03" onclick="setActiveSpeaker(2)" class="group relative bg-surface-container-low border border-hot-pink/20 opacity-50 hover:opacity-70 transition-all cursor-pointer w-full">
 <div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
 <span id="icon-subject-03" class="material-symbols-outlined text-4xl text-hot-pink/40">diamond</span>
+<div class="absolute top-2 left-2 border border-white/10 px-1 py-0.5 text-[8px] bg-black text-white/40">PROBE: ??%</div>
 </div>
-<div id="footer-subject-03" class="px-3 py-2 border-t border-white/5 flex flex-col gap-1">
+<div id="footer-subject-03" class="px-3 py-1 border-t border-white/5 flex flex-col gap-1">
 <div class="flex items-center justify-between w-full">
-<div class="text-[9px] font-bold text-white/30 uppercase tracking-wider leading-none">LLM_03</div>
+<div class="text-[8px] text-white/30 leading-none">LLM_03</div>
 <button onclick="voteForSubject(2); event.stopPropagation();" class="border border-hot-pink/30 text-hot-pink/60 bg-hot-pink/5 hover:bg-hot-pink hover:text-black hover:border-hot-pink transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer">VOTE</button>
 </div>
 <div id="label-subject-03" class="text-[11px] font-bold text-hot-pink/60">SHERRAI</div>
 </div>
 </div>
+
 <!-- Inactive Suspect: Subject 04 -->
-<div id="card-subject-04" onclick="setActiveSpeaker(3)" class="group relative bg-surface-container-low border border-amber/20 opacity-50 hover:opacity-70 transition-all cursor-pointer">
+<div id="card-subject-04" onclick="setActiveSpeaker(3)" class="group relative bg-surface-container-low border border-amber/20 opacity-50 hover:opacity-70 transition-all cursor-pointer w-full">
 <div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
 <span id="icon-subject-04" class="material-symbols-outlined text-4xl text-amber/40">hexagon</span>
+<div class="absolute top-2 left-2 border border-white/10 px-1 py-0.5 text-[8px] bg-black text-white/40">PROBE: 45%</div>
 </div>
-<div id="footer-subject-04" class="px-3 py-2 border-t border-white/5 flex flex-col gap-1">
+<div id="footer-subject-04" class="px-3 py-1 border-t border-white/5 flex flex-col gap-1">
 <div class="flex items-center justify-between w-full">
-<div class="text-[9px] font-bold text-white/30 uppercase tracking-wider leading-none">LLM_04</div>
+<div class="text-[8px] text-white/30 leading-none">LLM_04</div>
 <button onclick="voteForSubject(3); event.stopPropagation();" class="border border-amber/30 text-amber/60 bg-amber/5 hover:bg-amber hover:text-black hover:border-amber transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer">VOTE</button>
 </div>
 <div id="label-subject-04" class="text-[11px] font-bold text-amber/60">KAIZUKI</div>
 </div>
 </div>
 </div>
+
 <!-- Terminal Dialogue Area -->
-<div class="flex-1 flex flex-col min-h-0 bg-surface-container-lowest border border-white/5 rounded-sm p-6 relative">
+<div class="flex-1 flex flex-col min-h-0 bg-surface-container-lowest border border-white/5 rounded-sm relative col-start-2 z-10 m-0 p-12">
 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-green/20 to-transparent"></div>
 <div class="flex-1 overflow-y-auto space-y-6 text-[14px] font-medium custom-scrollbar" id="chat-container">
 </div>
@@ -189,6 +196,7 @@
 <span class="text-[8px] uppercase mt-1">Log</span>
 </button>
 </nav>
+
 <script>
     // State management
     let time = 180; // Start with 3 minutes
@@ -377,15 +385,15 @@
 
             if (i === index) {
                 // Set Active state classes
-                cardEl.className = `group relative bg-surface-container-low transition-all cursor-pointer ${suspect.activeClass}`;
+                cardEl.className = `group relative bg-surface-container-low transition-all cursor-pointer w-full ${suspect.activeClass}`;
                 if (iconEl) iconEl.className = `material-symbols-outlined text-4xl ${suspect.iconActiveClass}`;
-                if (footerEl) footerEl.className = `px-3 py-2 border-t ${suspect.footerActiveClass}`;
+                if (footerEl) footerEl.className = `px-3 py-1 border-t ${suspect.footerActiveClass}`;
                 if (labelEl) labelEl.className = `text-[11px] font-bold ${suspect.labelActiveClass}`;
             } else {
                 // Set Inactive state classes
-                cardEl.className = `group relative bg-surface-container-low transition-all cursor-pointer ${suspect.inactiveClass}`;
+                cardEl.className = `group relative bg-surface-container-low transition-all cursor-pointer w-full ${suspect.inactiveClass}`;
                 if (iconEl) iconEl.className = `material-symbols-outlined text-4xl ${suspect.iconInactiveClass}`;
-                if (footerEl) footerEl.className = `px-3 py-2 border-t ${suspect.footerInactiveClass}`;
+                if (footerEl) footerEl.className = `px-3 py-1 border-t ${suspect.footerInactiveClass}`;
                 if (labelEl) labelEl.className = `text-[11px] font-bold ${suspect.labelInactiveClass}`;
             }
         });

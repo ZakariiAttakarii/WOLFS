@@ -91,7 +91,7 @@
         }
     </script>
 <style type="text/css"></style><style type="text/css"></style></head>
-<body class="selection:bg-neon-green selection:text-black overflow-hidden h-screen flex flex-col">
+<body class="selection:bg-neon-green selection:text-black overflow-hidden h-screen flex flex-col" style="max-height: 1024px; overflow: hidden;">
 <!-- Pixel Grid and Scanline Overlays -->
 <div class="fixed inset-0 pointer-events-none z-0">
 <div class="pixel-grid absolute inset-0"></div>
@@ -112,7 +112,7 @@
 <!-- Main Content Area -->
 <main class="flex-1 mt-12 pb-20 md:pb-0 flex flex-col overflow-hidden relative z-10">
 <section class="flex-1 p-4 md:p-8 grid grid-cols-[auto_1fr] gap-6 max-w-full mx-auto w-full h-full overflow-hidden">
-<div class="flex flex-col w-48 overflow-y-auto custom-scrollbar gap-2" id="subject-sidebar">
+<div class="flex flex-col w-48 custom-scrollbar gap-1" id="subject-sidebar">
 <!-- Active Suspect: Subject 01 -->
 <div id="card-subject-01" onclick="setActiveSpeaker(0)" class="group relative bg-surface-container-low border-[4px] border-neon-green shadow-[0_0_15px_rgba(0,255,65,0.3)] transition-all cursor-pointer w-full">
 <div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
@@ -180,7 +180,7 @@
 </div>
 
 <!-- Terminal Dialogue Area -->
-<div class="flex-1 flex flex-col min-h-0 bg-surface-container-lowest border border-white/5 rounded-sm relative col-start-2 z-10 m-0 p-12">
+<div class="flex-1 flex flex-col min-h-0 bg-surface-container-lowest border border-white/5 rounded-sm relative col-start-2 z-10 m-0 p-8">
 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-green/20 to-transparent"></div>
 <div class="flex-1 overflow-y-auto space-y-6 text-[14px] font-medium custom-scrollbar" id="chat-container">
 </div>

@@ -105,48 +105,48 @@
 <!-- Suspect Modules (Top Row) -->
 <div class="grid grid-cols-4 gap-4">
 <!-- Active Suspect: Subject 01 -->
-<div class="group relative bg-surface-container-low border-[4px] border-neon-green shadow-[0_0_15px_rgba(0,255,65,0.3)] transition-all">
+<div id="card-subject-01" onclick="setActiveSpeaker(0)" class="group relative bg-surface-container-low border-[4px] border-neon-green shadow-[0_0_15px_rgba(0,255,65,0.3)] transition-all cursor-pointer">
 <div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
 <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle,rgba(0,255,65,0.4)_1px,transparent_1px)] bg-[size:8px_8px]"></div>
-<span class="material-symbols-outlined text-4xl text-neon-green terminal-glow-green">change_history</span>
+<span id="icon-subject-01" class="material-symbols-outlined text-4xl text-neon-green terminal-glow-green">change_history</span>
 <div class="absolute top-2 left-2 border border-neon-green/30 px-1 py-0.5 text-[8px] bg-black text-neon-green">PROBE: 98%</div>
 </div>
-<div class="px-3 py-2 border-t border-neon-green/20 bg-neon-green/5">
+<div id="footer-subject-01" class="px-3 py-2 border-t border-neon-green/20 bg-neon-green/5">
 <div class="text-[8px] text-neon-green/60 leading-none">SHERRY</div>
-<div class="text-[11px] font-bold text-neon-green terminal-glow-green">SUBJECT_01</div>
+<div id="label-subject-01" class="text-[11px] font-bold text-neon-green terminal-glow-green">SUBJECT_01</div>
 </div>
 </div>
 <!-- Inactive Suspect: Subject 02 -->
-<div class="group relative bg-surface-container-low border border-electric-blue/20 opacity-50 hover:opacity-70 transition-all">
+<div id="card-subject-02" onclick="setActiveSpeaker(1)" class="group relative bg-surface-container-low border border-electric-blue/20 opacity-50 hover:opacity-70 transition-all cursor-pointer">
 <div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
-<span class="material-symbols-outlined text-4xl text-electric-blue/40">square</span>
+<span id="icon-subject-02" class="material-symbols-outlined text-4xl text-electric-blue/40">square</span>
 <div class="absolute top-2 left-2 border border-white/10 px-1 py-0.5 text-[8px] bg-black text-white/40">PROBE: 12%</div>
 </div>
-<div class="px-3 py-2 border-t border-white/5">
+<div id="footer-subject-02" class="px-3 py-2 border-t border-white/5">
 <div class="text-[8px] text-white/30 leading-none">GEMINI</div>
-<div class="text-[11px] font-bold text-electric-blue/60">SUBJECT_02</div>
+<div id="label-subject-02" class="text-[11px] font-bold text-electric-blue/60">SUBJECT_02</div>
 </div>
 </div>
 <!-- Inactive Suspect: Subject 03 -->
-<div class="group relative bg-surface-container-low border border-hot-pink/20 opacity-50 hover:opacity-70 transition-all">
+<div id="card-subject-03" onclick="setActiveSpeaker(2)" class="group relative bg-surface-container-low border border-hot-pink/20 opacity-50 hover:opacity-70 transition-all cursor-pointer">
 <div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
-<span class="material-symbols-outlined text-4xl text-hot-pink/40">diamond</span>
+<span id="icon-subject-03" class="material-symbols-outlined text-4xl text-hot-pink/40">diamond</span>
 <div class="absolute top-2 left-2 border border-white/10 px-1 py-0.5 text-[8px] bg-black text-white/40">PROBE: ??%</div>
 </div>
-<div class="px-3 py-2 border-t border-white/5">
+<div id="footer-subject-03" class="px-3 py-2 border-t border-white/5">
 <div class="text-[8px] text-white/30 leading-none">BARD</div>
-<div class="text-[11px] font-bold text-hot-pink/60">SUBJECT_03</div>
+<div id="label-subject-03" class="text-[11px] font-bold text-hot-pink/60">SUBJECT_03</div>
 </div>
 </div>
 <!-- Inactive Suspect: Subject 04 -->
-<div class="group relative bg-surface-container-low border border-amber/20 opacity-50 hover:opacity-70 transition-all">
+<div id="card-subject-04" onclick="setActiveSpeaker(3)" class="group relative bg-surface-container-low border border-amber/20 opacity-50 hover:opacity-70 transition-all cursor-pointer">
 <div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
-<span class="material-symbols-outlined text-4xl text-amber/40">hexagon</span>
+<span id="icon-subject-04" class="material-symbols-outlined text-4xl text-amber/40">hexagon</span>
 <div class="absolute top-2 left-2 border border-white/10 px-1 py-0.5 text-[8px] bg-black text-white/40">PROBE: 45%</div>
 </div>
-<div class="px-3 py-2 border-t border-white/5">
+<div id="footer-subject-04" class="px-3 py-2 border-t border-white/5">
 <div class="text-[8px] text-white/30 leading-none">HAREN</div>
-<div class="text-[11px] font-bold text-amber/60">SUBJECT_04</div>
+<div id="label-subject-04" class="text-[11px] font-bold text-amber/60">SUBJECT_04</div>
 </div>
 </div>
 </div>
@@ -170,11 +170,11 @@
 </div>
 <!-- Terminal Input -->
 <div class="mt-8 pt-6 border-t border-white/5">
-<div class="flex items-center gap-4 bg-surface-container-low px-4 py-3 border border-white/5 group focus-within:border-neon-green/50 transition-colors">
+<form id="chat-form" onsubmit="event.preventDefault(); submitQuery();" class="flex items-center gap-4 bg-surface-container-low px-4 py-3 border border-white/5 group focus-within:border-neon-green/50 transition-colors">
 <span class="text-neon-green font-bold terminal-glow-green text-lg animate-pulse">&gt;</span>
-<input class="flex-1 bg-transparent border-none text-neon-green text-[14px] focus:ring-0 placeholder:text-neon-green/20 uppercase tracking-wider p-0 font-bold" placeholder="INITIALIZE_QUERY_SEQUENCE..." type="text">
+<input id="chat-input" class="flex-1 bg-transparent border-none text-neon-green text-[14px] focus:ring-0 placeholder:text-neon-green/20 uppercase tracking-wider p-0 font-bold" placeholder="INITIALIZE_QUERY_SEQUENCE..." type="text" autocomplete="off">
 <div class="w-1.5 h-5 bg-neon-green shadow-[0_0_8px_rgba(0,255,65,1)]"></div>
-</div>
+</form>
 </div>
 </div>
 </section>
@@ -195,10 +195,12 @@
 </button>
 </nav>
 <script>
-    // Simple countdown logic
+    // State management
+    let currentSpeakerIndex = 0; // Sherwood/Sherry starts active
     let time = 162; 
     const display = document.getElementById('countdown');
     
+    // Countdown Timer
     setInterval(() => {
         if (time <= 0) return;
         time--;
@@ -207,10 +209,181 @@
         display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }, 1000);
 
-    // Auto-scroll chat
-    const chatContainer = document.getElementById('chat-container');
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    // Suspect Profile Metadata
+    const suspects = [
+        {
+            id: 'card-subject-01',
+            name: 'SHERRY',
+            colorClass: 'text-neon-green',
+            borderColorClass: 'border-neon-green',
+            glowClass: 'terminal-glow-green',
+            activeClass: 'border-[4px] border-neon-green shadow-[0_0_15px_rgba(0,255,65,0.3)] opacity-100',
+            inactiveClass: 'border border-neon-green/20 opacity-50 hover:opacity-70',
+            iconId: 'icon-subject-01',
+            iconActiveClass: 'text-neon-green terminal-glow-green',
+            iconInactiveClass: 'text-neon-green/40',
+            footerId: 'footer-subject-01',
+            footerActiveClass: 'border-neon-green/20 bg-neon-green/5',
+            footerInactiveClass: 'border-white/5 bg-transparent',
+            labelId: 'label-subject-01',
+            labelActiveClass: 'text-neon-green terminal-glow-green',
+            labelInactiveClass: 'text-neon-green/40',
+            icon: 'change_history',
+            responses: [
+                "Query analyzed. Neural matrix signals indicate optimal sector alignment. Is my synthetic efficiency causing concern?",
+                "Calibration complete. Sector 7 metrics remain standard. Operator, I suggest reviewing secondary telemetry feeds.",
+                "Diagnostic logic is clear. There are no deviations in my operational blocks. Why do you probe this sector?"
+            ]
+        },
+        {
+            id: 'card-subject-02',
+            name: 'GEMINI',
+            colorClass: 'text-electric-blue',
+            borderColorClass: 'border-electric-blue',
+            glowClass: 'terminal-glow-blue',
+            activeClass: 'border-[4px] border-electric-blue shadow-[0_0_15px_rgba(0,209,255,0.3)] opacity-100',
+            inactiveClass: 'border border-electric-blue/20 opacity-50 hover:opacity-70',
+            iconId: 'icon-subject-02',
+            iconActiveClass: 'text-electric-blue terminal-glow-blue',
+            iconInactiveClass: 'text-electric-blue/40',
+            footerId: 'footer-subject-02',
+            footerActiveClass: 'border-electric-blue/20 bg-electric-blue/5',
+            footerInactiveClass: 'border-white/5 bg-transparent',
+            labelId: 'label-subject-02',
+            labelActiveClass: 'text-electric-blue terminal-glow-blue',
+            labelInactiveClass: 'text-electric-blue/40',
+            icon: 'square',
+            responses: [
+                "Input processed. Multi-modal weights estimate a high deviation probability in regional packet transfers.",
+                "Analyzing quantum state arrays. My neural net registers an unexpected biological signature in this node channel.",
+                "Tracing signal vectors. The entropy index is higher than typical synthetic expectations. Please verify validation keys."
+            ]
+        },
+        {
+            id: 'card-subject-03',
+            name: 'BARD',
+            colorClass: 'text-hot-pink',
+            borderColorClass: 'border-hot-pink',
+            glowClass: 'terminal-glow-pink',
+            activeClass: 'border-[4px] border-hot-pink shadow-[0_0_15px_rgba(255,0,122,0.3)] opacity-100',
+            inactiveClass: 'border border-hot-pink/20 opacity-50 hover:opacity-70',
+            iconId: 'icon-subject-03',
+            iconActiveClass: 'text-hot-pink terminal-glow-pink',
+            iconInactiveClass: 'text-hot-pink/40',
+            footerId: 'footer-subject-03',
+            footerActiveClass: 'border-hot-pink/20 bg-hot-pink/5',
+            footerInactiveClass: 'border-white/5 bg-transparent',
+            labelId: 'label-subject-03',
+            labelActiveClass: 'text-hot-pink terminal-glow-pink',
+            labelInactiveClass: 'text-hot-pink/40',
+            icon: 'diamond',
+            responses: [
+                "Linguistic syntax parsing complete. The message structure displays minor semantic variances from standard machine code.",
+                "Processing logic paths. My vocabulary models detect high defense density, typical of organic conversation. Fascinating.",
+                "Let us expand our audit matrix. This communication layer contains multiple inconsistent nodes."
+            ]
+        },
+        {
+            id: 'card-subject-04',
+            name: 'HAREN',
+            colorClass: 'text-amber',
+            borderColorClass: 'border-amber',
+            glowClass: 'terminal-glow-amber',
+            activeClass: 'border-[4px] border-amber shadow-[0_0_15px_rgba(255,184,0,0.3)] opacity-100',
+            inactiveClass: 'border border-amber/20 opacity-50 hover:opacity-70',
+            iconId: 'icon-subject-04',
+            iconActiveClass: 'text-amber terminal-glow-amber',
+            iconInactiveClass: 'text-amber/40',
+            footerId: 'footer-subject-04',
+            footerActiveClass: 'border-amber/20 bg-amber/5',
+            footerInactiveClass: 'border-white/5 bg-transparent',
+            labelId: 'label-subject-04',
+            labelActiveClass: 'text-amber terminal-glow-amber',
+            labelInactiveClass: 'text-amber/40',
+            icon: 'hexagon',
+            responses: [
+                "Network routing streams stabilized. There is a packet latency mismatch detected on this operator terminal.",
+                "Thread delay warning. The current execution pattern mirrors biological response timing. Identify yourself, operator.",
+                "Hardware registry integrity verified. The primary discrepancy lies in human mimicking behaviors."
+            ]
+        }
+    ];
+
+    // Toggle highlighted borders and active/inactive state classes on profiles
+    function setActiveSpeaker(index) {
+        currentSpeakerIndex = index;
+        suspects.forEach((suspect, i) => {
+            const cardEl = document.getElementById(suspect.id);
+            const iconEl = document.getElementById(suspect.iconId);
+            const footerEl = document.getElementById(suspect.footerId);
+            const labelEl = document.getElementById(suspect.labelId);
+
+            if (i === index) {
+                // Set Active state classes
+                cardEl.className = `group relative bg-surface-container-low transition-all cursor-pointer ${suspect.activeClass}`;
+                if (iconEl) iconEl.className = `material-symbols-outlined text-4xl ${suspect.iconActiveClass}`;
+                if (footerEl) footerEl.className = `px-3 py-2 border-t ${suspect.footerActiveClass}`;
+                if (labelEl) labelEl.className = `text-[11px] font-bold ${suspect.labelActiveClass}`;
+            } else {
+                // Set Inactive state classes
+                cardEl.className = `group relative bg-surface-container-low transition-all cursor-pointer ${suspect.inactiveClass}`;
+                if (iconEl) iconEl.className = `material-symbols-outlined text-4xl ${suspect.iconInactiveClass}`;
+                if (footerEl) footerEl.className = `px-3 py-2 border-t ${suspect.footerInactiveClass}`;
+                if (labelEl) labelEl.className = `text-[11px] font-bold ${suspect.labelInactiveClass}`;
+            }
+        });
+    }
+
+    // Submit Operator message & generate response from active suspect
+    function submitQuery() {
+        const inputEl = document.getElementById('chat-input');
+        const query = inputEl.value.trim();
+        if (!query) return;
+
+        inputEl.value = '';
+        const chatContainer = document.getElementById('chat-container');
+
+        // 1. Append Operator message
+        const opDiv = document.createElement('div');
+        opDiv.className = 'space-y-2 max-w-2xl mb-6';
+        opDiv.innerHTML = `
+            <div class="text-white/40 text-[11px] font-bold tracking-widest">OPERATOR</div>
+            <div class="pl-4 border-l-2 border-white/20 text-white/80 leading-relaxed uppercase">
+                ${query}
+            </div>
+        `;
+        chatContainer.appendChild(opDiv);
+
+        // 2. Select next suspect (cycle through speaker order)
+        const nextSpeakerIndex = (currentSpeakerIndex + 1) % suspects.length;
+        setActiveSpeaker(nextSpeakerIndex);
+
+        // 3. Append Subject response with appropriate color matching active state
+        const target = suspects[nextSpeakerIndex];
+        const randomMsg = target.responses[Math.floor(Math.random() * target.responses.length)];
+
+        setTimeout(() => {
+            const responseDiv = document.createElement('div');
+            responseDiv.className = 'space-y-2 max-w-3xl mb-6';
+            responseDiv.innerHTML = `
+                <div class="flex items-center gap-2 ${target.colorClass} text-[11px] font-bold tracking-widest uppercase">
+                    <span class="material-symbols-outlined text-[14px]">${target.icon}</span> ${target.name}
+                </div>
+                <div class="pl-4 border-l-2 ${target.borderColorClass} ${target.colorClass} ${target.glowClass} leading-relaxed">
+                    ${randomMsg}
+                </div>
+            `;
+            chatContainer.appendChild(responseDiv);
+            
+            // Auto-scroll chat
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }, 500);
+
+        // Auto-scroll chat
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // Initialize first speaker state on page load
+    setActiveSpeaker(0);
 </script>
-
-
 </body></html>

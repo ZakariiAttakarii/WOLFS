@@ -111,7 +111,7 @@
 <span id="icon-subject-01" class="material-symbols-outlined text-4xl text-neon-green terminal-glow-green">change_history</span>
 </div>
 <div id="footer-subject-01" class="px-3 py-2 border-t border-neon-green/20 bg-neon-green/5">
-<div class="text-[8px] text-neon-green/60 leading-none">SHERRY</div>
+<div class="text-[8px] text-neon-green/60 leading-none">KAICHENG</div>
 <div id="label-subject-01" class="text-[11px] font-bold text-neon-green terminal-glow-green">SUBJECT_01</div>
 </div>
 </div>
@@ -121,7 +121,7 @@
 <span id="icon-subject-02" class="material-symbols-outlined text-4xl text-electric-blue/40">square</span>
 </div>
 <div id="footer-subject-02" class="px-3 py-2 border-t border-white/5">
-<div class="text-[8px] text-white/30 leading-none">GEMINI</div>
+<div class="text-[8px] text-white/30 leading-none">HAIREN</div>
 <div id="label-subject-02" class="text-[11px] font-bold text-electric-blue/60">SUBJECT_02</div>
 </div>
 </div>
@@ -131,7 +131,7 @@
 <span id="icon-subject-03" class="material-symbols-outlined text-4xl text-hot-pink/40">diamond</span>
 </div>
 <div id="footer-subject-03" class="px-3 py-2 border-t border-white/5">
-<div class="text-[8px] text-white/30 leading-none">BARD</div>
+<div class="text-[8px] text-white/30 leading-none">SHERRAI</div>
 <div id="label-subject-03" class="text-[11px] font-bold text-hot-pink/60">SUBJECT_03</div>
 </div>
 </div>
@@ -141,7 +141,7 @@
 <span id="icon-subject-04" class="material-symbols-outlined text-4xl text-amber/40">hexagon</span>
 </div>
 <div id="footer-subject-04" class="px-3 py-2 border-t border-white/5">
-<div class="text-[8px] text-white/30 leading-none">HAREN</div>
+<div class="text-[8px] text-white/30 leading-none">KAIZUKI</div>
 <div id="label-subject-04" class="text-[11px] font-bold text-amber/60">SUBJECT_04</div>
 </div>
 </div>
@@ -158,7 +158,7 @@
 <!-- Active Subject Response -->
 <div class="space-y-2 max-w-3xl">
 <div class="flex items-center gap-2 text-neon-green text-[11px] font-bold tracking-widest">
-<span class="material-symbols-outlined text-[14px]">change_history</span> SHERRY<span style="letter-spacing: 0.1em;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</span></div>
+<span class="material-symbols-outlined text-[14px]">change_history</span> KAICHENG<span style="letter-spacing: 0.1em;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</span></div>
 <div class="pl-4 border-l-2 border-neon-green text-neon-green terminal-glow-green leading-relaxed">
  Directive confirmed. Processing data streams for sector 7. My logic remains consistent with user requirements. Are you questioning my efficiency?
                     </div>
@@ -192,7 +192,7 @@
 </nav>
 <script>
     // State management
-    let currentSpeakerIndex = 0; // Sherwood/Sherry starts active
+    let currentSpeakerIndex = 0; // Kaicheng starts active
     let time = 162; 
     const display = document.getElementById('countdown');
     
@@ -209,7 +209,7 @@
     const suspects = [
         {
             id: 'card-subject-01',
-            name: 'SHERRY',
+            name: 'KAICHENG',
             colorClass: 'text-neon-green',
             borderColorClass: 'border-neon-green',
             glowClass: 'terminal-glow-green',
@@ -233,7 +233,7 @@
         },
         {
             id: 'card-subject-02',
-            name: 'GEMINI',
+            name: 'HAIREN',
             colorClass: 'text-electric-blue',
             borderColorClass: 'border-electric-blue',
             glowClass: 'terminal-glow-blue',
@@ -257,7 +257,7 @@
         },
         {
             id: 'card-subject-03',
-            name: 'BARD',
+            name: 'SHERRAI',
             colorClass: 'text-hot-pink',
             borderColorClass: 'border-hot-pink',
             glowClass: 'terminal-glow-pink',
@@ -281,7 +281,7 @@
         },
         {
             id: 'card-subject-04',
-            name: 'HAREN',
+            name: 'KAIZUKI',
             colorClass: 'text-amber',
             borderColorClass: 'border-amber',
             glowClass: 'terminal-glow-amber',
@@ -340,25 +340,25 @@
             formEl.className = "flex items-center gap-4 bg-surface-container-low px-4 py-3 border border-white/5 group transition-colors duration-300";
             
             if (index === 0) {
-                // Sherry (Neon Green)
+                // Kaicheng (Neon Green)
                 formEl.classList.add("focus-within:border-neon-green/50");
                 arrowEl.className = "text-neon-green font-bold terminal-glow-green text-lg animate-pulse";
                 inputEl.className = "flex-1 bg-transparent border-none text-neon-green text-[14px] focus:ring-0 placeholder:text-neon-green/20 uppercase tracking-wider p-0 font-bold transition-colors duration-300";
                 cursorEl.className = "w-1.5 h-5 bg-neon-green shadow-[0_0_8px_rgba(0,255,65,1)] transition-all duration-300";
             } else if (index === 1) {
-                // Gemini (Electric Blue)
+                // Hairen (Electric Blue)
                 formEl.classList.add("focus-within:border-electric-blue/50");
                 arrowEl.className = "text-electric-blue font-bold terminal-glow-blue text-lg animate-pulse";
                 inputEl.className = "flex-1 bg-transparent border-none text-electric-blue text-[14px] focus:ring-0 placeholder:text-electric-blue/20 uppercase tracking-wider p-0 font-bold transition-colors duration-300";
                 cursorEl.className = "w-1.5 h-5 bg-electric-blue shadow-[0_0_8px_rgba(0,209,255,1)] transition-all duration-300";
             } else if (index === 2) {
-                // Bard (Hot Pink)
+                // Sherrai (Hot Pink)
                 formEl.classList.add("focus-within:border-hot-pink/50");
                 arrowEl.className = "text-hot-pink font-bold terminal-glow-pink text-lg animate-pulse";
                 inputEl.className = "flex-1 bg-transparent border-none text-hot-pink text-[14px] focus:ring-0 placeholder:text-hot-pink/20 uppercase tracking-wider p-0 font-bold transition-colors duration-300";
                 cursorEl.className = "w-1.5 h-5 bg-hot-pink shadow-[0_0_8px_rgba(255,0,122,1)] transition-all duration-300";
             } else if (index === 3) {
-                // Haren (Amber)
+                // Kaizuki (Amber)
                 formEl.classList.add("focus-within:border-amber/50");
                 arrowEl.className = "text-amber font-bold terminal-glow-amber text-lg animate-pulse";
                 inputEl.className = "flex-1 bg-transparent border-none text-amber text-[14px] focus:ring-0 placeholder:text-amber/20 uppercase tracking-wider p-0 font-bold transition-colors duration-300";

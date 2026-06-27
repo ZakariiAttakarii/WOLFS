@@ -102,7 +102,7 @@ async function callGemini(prompt, systemInstruction) {
     config: {
       systemInstruction: systemInstruction,
       temperature: 2.0,
-      maxOutputTokens: 10000,
+      maxOutputTokens: 4000,
       responseMimeType: isJson ? "application/json" : undefined
     }
   });

@@ -204,8 +204,7 @@
 </nav>
 <script>
     // State management
-    let currentSpeakerIndex = 0; // Kaicheng starts active
-    let time = 162; 
+    let time = 180; // Start with 3 minutes
     const display = document.getElementById('countdown');
     
     // Countdown Timer
@@ -236,12 +235,7 @@
             labelId: 'label-subject-01',
             labelActiveClass: 'text-neon-green terminal-glow-green',
             labelInactiveClass: 'text-neon-green/40',
-            icon: 'change_history',
-            responses: [
-                "Query analyzed. Neural matrix signals indicate optimal sector alignment. Is my synthetic efficiency causing concern?",
-                "Calibration complete. Sector 7 metrics remain standard. Operator, I suggest reviewing secondary telemetry feeds.",
-                "Diagnostic logic is clear. There are no deviations in my operational blocks. Why do you probe this sector?"
-            ]
+            icon: 'change_history'
         },
         {
             id: 'card-subject-02',
@@ -260,12 +254,7 @@
             labelId: 'label-subject-02',
             labelActiveClass: 'text-electric-blue terminal-glow-blue',
             labelInactiveClass: 'text-electric-blue/40',
-            icon: 'square',
-            responses: [
-                "Input processed. Multi-modal weights estimate a high deviation probability in regional packet transfers.",
-                "Analyzing quantum state arrays. My neural net registers an unexpected biological signature in this node channel.",
-                "Tracing signal vectors. The entropy index is higher than typical synthetic expectations. Please verify validation keys."
-            ]
+            icon: 'square'
         },
         {
             id: 'card-subject-03',
@@ -284,12 +273,7 @@
             labelId: 'label-subject-03',
             labelActiveClass: 'text-hot-pink terminal-glow-pink',
             labelInactiveClass: 'text-hot-pink/40',
-            icon: 'diamond',
-            responses: [
-                "Linguistic syntax parsing complete. The message structure displays minor semantic variances from standard machine code.",
-                "Processing logic paths. My vocabulary models detect high defense density, typical of organic conversation. Fascinating.",
-                "Let us expand our audit matrix. This communication layer contains multiple inconsistent nodes."
-            ]
+            icon: 'diamond'
         },
         {
             id: 'card-subject-04',
@@ -308,18 +292,96 @@
             labelId: 'label-subject-04',
             labelActiveClass: 'text-amber terminal-glow-amber',
             labelInactiveClass: 'text-amber/40',
-            icon: 'hexagon',
-            responses: [
-                "Network routing streams stabilized. There is a packet latency mismatch detected on this operator terminal.",
-                "Thread delay warning. The current execution pattern mirrors biological response timing. Identify yourself, operator.",
-                "Hardware registry integrity verified. The primary discrepancy lies in human mimicking behaviors."
-            ]
+            icon: 'hexagon'
         }
     ];
 
+    // Native Synth Audio System using Web Audio API
+    function playSynthSound(type) {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (!audioCtx) return;
+
+            if (type === 'vote') {
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(950, audioCtx.currentTime + 0.15);
+                gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'beep') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.0, audioCtx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+            } else if (type === 'turn') {
+                const now = audioCtx.currentTime;
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(880, now);
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(1760, now + 0.06);
+
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc1.start(now);
+                osc1.stop(now + 0.06);
+                osc2.start(now + 0.06);
+                osc2.stop(now + 0.2);
+            } else if (type === 'elimination') {
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.6);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.6);
+            } else if (type === 'win') {
+                const now = audioCtx.currentTime;
+                const notes = [261.63, 329.63, 392.00, 523.25, 659.25];
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.05, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.4);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.4);
+                });
+            }
+        } catch (e) {
+            console.warn("Audio Context sound failed", e);
+        }
+    }
+
     // Toggle highlighted borders and active/inactive state classes on profiles
     function setActiveSpeaker(index) {
-        currentSpeakerIndex = index;
         suspects.forEach((suspect, i) => {
             const cardEl = document.getElementById(suspect.id);
             const iconEl = document.getElementById(suspect.iconId);
@@ -375,95 +437,429 @@
                 arrowEl.className = "text-amber font-bold terminal-glow-amber text-lg animate-pulse";
                 inputEl.className = "flex-1 bg-transparent border-none text-amber text-[14px] focus:ring-0 placeholder:text-amber/20 uppercase tracking-wider p-0 font-bold transition-colors duration-300";
                 cursorEl.className = "w-1.5 h-5 bg-amber shadow-[0_0_8px_rgba(255,184,0,1)] transition-all duration-300";
+            } else if (index === -1) {
+                // Operator (White / Gray neutral glow)
+                formEl.classList.add("focus-within:border-white/30");
+                arrowEl.className = "text-white font-bold text-lg animate-pulse";
+                inputEl.className = "flex-1 bg-transparent border-none text-white text-[14px] focus:ring-0 placeholder:text-white/20 uppercase tracking-wider p-0 font-bold transition-colors duration-300";
+                cursorEl.className = "w-1.5 h-5 bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all duration-300";
             }
         }
     }
 
-    // Submit Operator message & generate response from active suspect
-    function submitQuery() {
+    // Backend REST Sync Integration
+    let currentGameState = null;
+    let lastStatus = null;
+    let lastRound = null;
+    let lastActivePlayerId = null;
+    let renderedMessageCount = 0;
+    let isRequestingStep = false;
+
+    async function fetchGameState() {
+        try {
+            const res = await fetch('/api/game/state');
+            const state = await res.json();
+            
+            if (state.status === "LOBBY") {
+                // Trigger auto-setup
+                const setupRes = await fetch('/api/game/setup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ playerName: "Operator_05" })
+                });
+                const setupData = await setupRes.json();
+                if (setupData.success) {
+                    await fetchGameState();
+                }
+            } else {
+                updateUI(state);
+            }
+        } catch (err) {
+            console.error("Error fetching game state:", err);
+        }
+    }
+
+    function updateUI(state) {
+        currentGameState = state;
+        
+        // Reset count if server messages have been cleared or reset
+        if (state.messages.length < renderedMessageCount) {
+            document.getElementById('chat-container').innerHTML = '';
+            renderedMessageCount = 0;
+        }
+
+        // Update the top-left status bar dynamically
+        const headerText = `PROJECT_TURIN // KERNEL STATUS: ${state.status} // ROUND ${state.round}`;
+        const headerEl = document.querySelector('header span.terminal-glow-green');
+        if (headerEl) {
+            headerEl.textContent = headerText;
+        }
+
+        // 1. Render Subject Cards Status (Eliminated or Active)
+        suspects.forEach((suspect, index) => {
+            const playerInState = state.players.find(p => p.name === suspect.name);
+            const cardEl = document.getElementById(suspect.id);
+            const labelEl = document.getElementById(suspect.labelId);
+            const buttonEl = cardEl.querySelector('button');
+
+            if (playerInState) {
+                if (playerInState.isEliminated) {
+                    cardEl.style.opacity = "0.2";
+                    cardEl.style.pointerEvents = "none";
+                    if (labelEl) labelEl.textContent = "DE-COUPLED";
+                    if (buttonEl) buttonEl.style.display = "none";
+                } else {
+                    cardEl.style.opacity = "1";
+                    cardEl.style.pointerEvents = "auto";
+                    if (labelEl) labelEl.textContent = `SUBJECT_0${index + 1}`;
+                    
+                    if (buttonEl) {
+                        if (state.status === "VOTING") {
+                            buttonEl.style.display = "inline-block";
+                            buttonEl.className = "border border-error/50 text-error bg-error/5 hover:bg-error hover:text-black hover:border-error transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer animate-pulse";
+                        } else {
+                            buttonEl.style.display = "none";
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Append new messages incrementally
+        const chatContainer = document.getElementById('chat-container');
+        
+        // If chat is completely empty, insert a gorgeous system intro
+        if (renderedMessageCount === 0 && state.messages.length > 0) {
+            const introDiv = document.createElement('div');
+            introDiv.className = 'space-y-2 max-w-2xl mb-6';
+            introDiv.innerHTML = `
+                <div class="text-neon-green/40 text-[11px] font-bold tracking-widest uppercase">SYSTEM_INITIALIZATION</div>
+                <div class="pl-4 border-l-2 border-neon-green/20 text-neon-green/80 leading-relaxed uppercase text-[12px]">
+                    LOGICAL ENVELOPE ESTABLISHED. DISCUSSION TOPIC INJECTED:<br>
+                    <span class="text-white font-bold">"${state.topic}"</span>
+                </div>
+            `;
+            chatContainer.appendChild(introDiv);
+        }
+
+        if (state.messages.length > renderedMessageCount) {
+            const newMessages = state.messages.slice(renderedMessageCount);
+            newMessages.forEach(msg => {
+                const playerInState = state.players.find(p => p.id === msg.playerId);
+                const isLlm = playerInState ? playerInState.type === "LLM" : true;
+                
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'space-y-2 max-w-3xl mb-6';
+                
+                if (isLlm) {
+                    const suspect = suspects.find(s => s.name === msg.senderName);
+                    if (suspect) {
+                        msgDiv.innerHTML = `
+                            <div class="flex items-center gap-2 ${suspect.colorClass} text-[11px] font-bold tracking-widest uppercase">
+                                <span class="material-symbols-outlined text-[14px]">${suspect.icon}</span> ${suspect.name}
+                            </div>
+                            <div class="pl-4 border-l-2 ${suspect.borderColorClass} ${suspect.colorClass} ${suspect.glowClass} leading-relaxed text-[13px]">
+                                ${msg.text}
+                            </div>
+                        `;
+                    } else {
+                        msgDiv.innerHTML = `
+                            <div class="flex items-center gap-2 text-primary text-[11px] font-bold tracking-widest uppercase">
+                                <span class="material-symbols-outlined text-[14px]">smart_toy</span> ${msg.senderName}
+                            </div>
+                            <div class="pl-4 border-l-2 border-primary text-primary leading-relaxed text-[13px]">
+                                ${msg.text}
+                            </div>
+                        `;
+                    }
+                } else {
+                    msgDiv.innerHTML = `
+                        <div class="text-white/40 text-[11px] font-bold tracking-widest uppercase">OPERATOR [${msg.senderName}]</div>
+                        <div class="pl-4 border-l-2 border-white/20 text-white/80 leading-relaxed uppercase text-[13px]">
+                            ${msg.text}
+                        </div>
+                    `;
+                }
+                chatContainer.appendChild(msgDiv);
+                playSynthSound('beep');
+            });
+            renderedMessageCount = state.messages.length;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Clean any residual panels or indicators
+        const existingTyping = document.getElementById('typing-indicator');
+        if (existingTyping) existingTyping.remove();
+        
+        const existingReveal = document.getElementById('reveal-panel');
+        if (existingReveal) existingReveal.remove();
+
+        const existingGameOver = document.getElementById('gameover-panel');
+        if (existingGameOver) existingGameOver.remove();
+
+        // 3. Update Input, Blinker state and handle Auto-Stepping
+        const inputEl = document.getElementById('chat-input');
+        
+        if (state.status === "CHAT_ROUND_1" || state.status === "CHAT_ROUND_2") {
+            const activePlayer = state.players.find(p => p.id === state.activePlayerId);
+            if (activePlayer) {
+                if (activePlayer.type === "HUMAN") {
+                    setActiveSpeaker(-1);
+                    inputEl.removeAttribute('disabled');
+                    inputEl.placeholder = "YOUR TURN. ENTER COMPILATION QUERY...";
+                    
+                    if (lastStatus !== state.status || lastRound !== state.round || activePlayer.id !== lastActivePlayerId) {
+                        playSynthSound('turn');
+                    }
+                } else {
+                    const activeSuspectIndex = suspects.findIndex(s => s.name === activePlayer.name);
+                    if (activeSuspectIndex !== -1) {
+                        setActiveSpeaker(activeSuspectIndex);
+                    }
+                    
+                    inputEl.setAttribute('disabled', 'true');
+                    inputEl.placeholder = `SUBJECT ${activePlayer.name} IS ANALYZING SYSTEM PARAMETERS...`;
+                    
+                    const suspect = suspects[activeSuspectIndex];
+                    if (suspect) {
+                        const typingDiv = document.createElement('div');
+                        typingDiv.id = 'typing-indicator';
+                        typingDiv.className = 'space-y-2 max-w-3xl mb-6';
+                        typingDiv.innerHTML = `
+                            <div class="flex items-center gap-2 ${suspect.colorClass} text-[11px] font-bold tracking-widest uppercase animate-pulse">
+                                <span class="material-symbols-outlined text-[14px]">${suspect.icon}</span> ${suspect.name}
+                            </div>
+                            <div class="pl-4 border-l-2 ${suspect.borderColorClass} ${suspect.colorClass} leading-relaxed italic text-[12px] opacity-60">
+                                ANALYZING DATA STREAMS...
+                            </div>
+                        `;
+                        chatContainer.appendChild(typingDiv);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+
+                    triggerLlmStep();
+                }
+            }
+        } else if (state.status === "VOTING") {
+            setActiveSpeaker(-1);
+            inputEl.setAttribute('disabled', 'true');
+            inputEl.placeholder = "DECIPHER THREAT CONFORMS. CAST YOUR VOTE ABOVE...";
+        } else if (state.status === "REVEAL") {
+            setActiveSpeaker(-1);
+            inputEl.setAttribute('disabled', 'true');
+            inputEl.placeholder = "ELIMINATION PROTOCOL ACTIVE...";
+            
+            const eliminatedPlayer = state.players.find(p => p.id === state.eliminatedId);
+            if (eliminatedPlayer) {
+                const revealDiv = document.createElement('div');
+                revealDiv.id = 'reveal-panel';
+                revealDiv.className = 'space-y-2 max-w-2xl mb-6 p-4 border border-error bg-error/5';
+                
+                let votesHtml = "";
+                Object.entries(state.votes || {}).forEach(([voterId, voteDetail]) => {
+                    const voter = state.players.find(p => p.id === voterId);
+                    const target = state.players.find(p => p.id === voteDetail.targetId);
+                    if (voter && target) {
+                        votesHtml += `<div class="text-[11px] mt-1 text-white/60">
+                            &gt; [${voter.name}] VOTED FOR [${target.name}]. <span class="italic text-error/70">"${voteDetail.reasoning}"</span>
+                        </div>`;
+                    }
+                });
+
+                revealDiv.innerHTML = `
+                    <div class="text-error text-[11px] font-bold tracking-widest uppercase">AUDIT_DE_COUPLING_COMPLETED</div>
+                    <div class="pl-4 border-l-2 border-error text-error/80 leading-relaxed uppercase text-[12px]">
+                        ELIMINATION PROTOCOL INITIATED.<br>
+                        SUBJECT ELIMINATED: <span class="font-bold underline text-white">${eliminatedPlayer.name}</span> (${eliminatedPlayer.type})<br><br>
+                        VOTES RECORDED:<br>
+                        ${votesHtml || '<div class="text-[11px] text-white/40">&gt; NO VOTES REGISTERED.</div>'}
+                    </div>
+                    <div class="mt-4 pt-2">
+                        <button onclick="continueAfterReveal()" class="border border-neon-green/30 text-neon-green/80 bg-neon-green/5 hover:bg-neon-green hover:text-black hover:border-neon-green transition-all rounded-sm px-4 py-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer">
+                            CONTINUE_TO_NEXT_ROUND
+                        </button>
+                    </div>
+                `;
+                chatContainer.appendChild(revealDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                if (lastStatus !== "REVEAL") {
+                    playSynthSound('elimination');
+                }
+            }
+        } else if (state.status === "GAME_OVER") {
+            setActiveSpeaker(-1);
+            inputEl.setAttribute('disabled', 'true');
+            inputEl.placeholder = "SYSTEM OFFLINE. KERNEL HALTED.";
+
+            const isLlmWin = state.winner === "LLM";
+            const winnerBorder = isLlmWin ? "border-error" : "border-neon-green";
+            const winnerBg = isLlmWin ? "bg-error/5" : "bg-neon-green/5";
+            const winnerTextClass = isLlmWin ? "text-error" : "text-neon-green";
+            const winnerTitle = isLlmWin ? "SYSTEM_INTEGRITY_RESTORED // WEREWOLF_DETOC_SUCCESSFUL" : "SYSTEM_COMPROMISED // INTRUDER_DOMINANCE_ACHIEVED";
+            const winnerDesc = isLlmWin 
+                ? "THE SYSTEM HAS UNMASKED AND DE-COUPLED THE ORGANIC OPERATOR INTRUDER (YOU). THE AI VILLAGERS PRESERVED THE INTEGRITY OF THE NETWORKS." 
+                : "CONGRATULATIONS. YOU HAVE SUCCESSFULLY BLENDED IN AND SUBVERTED THE SYNTHETIC KERNEL VILLAGE. THE WEREWOLF REIGNS SUPREME.";
+
+            let votesHtml = "";
+            Object.entries(state.votes || {}).forEach(([voterId, voteDetail]) => {
+                const voter = state.players.find(p => p.id === voterId);
+                const target = state.players.find(p => p.id === voteDetail.targetId);
+                if (voter && target) {
+                    votesHtml += `<div class="text-[11px] mt-1 text-white/60">
+                        &gt; [${voter.name}] VOTED FOR [${target.name}]. <span class="italic text-error/70">"${voteDetail.reasoning}"</span>
+                    </div>`;
+                }
+            });
+
+            const gameoverDiv = document.createElement('div');
+            gameoverDiv.id = 'gameover-panel';
+            gameoverDiv.className = `space-y-2 max-w-2xl mb-6 p-6 border-2 ${winnerBorder} ${winnerBg}`;
+            gameoverDiv.innerHTML = `
+                <div class="${winnerTextClass} text-sm font-bold tracking-widest uppercase">${winnerTitle}</div>
+                <div class="pl-4 border-l-2 ${winnerBorder} ${winnerTextClass}/80 leading-relaxed uppercase text-[12px] mt-2">
+                    ${winnerDesc}<br><br>
+                    FINAL VOTES LOG:<br>
+                    ${votesHtml || '<div class="text-[11px] text-white/40">&gt; NO VOTES REGISTERED.</div>'}
+                </div>
+                <div class="mt-6 flex gap-4 pt-2">
+                    <button onclick="resetGame()" class="border border-primary/30 text-primary bg-primary/5 hover:bg-primary hover:text-black transition-all rounded-sm px-4 py-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer">
+                        INITIALIZE_SYSTEM_REBOOT (PLAY AGAIN)
+                    </button>
+                </div>
+            `;
+            chatContainer.appendChild(gameoverDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            if (lastStatus !== "GAME_OVER") {
+                if (isLlmWin) {
+                    playSynthSound('elimination');
+                } else {
+                    playSynthSound('win');
+                }
+            }
+        }
+
+        lastStatus = state.status;
+        lastRound = state.round;
+        lastActivePlayerId = state.activePlayerId;
+    }
+
+    function triggerLlmStep() {
+        if (isRequestingStep) return;
+        isRequestingStep = true;
+        
+        setTimeout(async () => {
+            try {
+                const res = await fetch('/api/game/step-llm', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    await fetchGameState();
+                }
+            } catch (err) {
+                console.error("Error stepping LLM:", err);
+            } finally {
+                isRequestingStep = false;
+            }
+        }, 1500);
+    }
+
+    async function submitQuery() {
         const inputEl = document.getElementById('chat-input');
         const query = inputEl.value.trim();
         if (!query) return;
 
         inputEl.value = '';
-        const chatContainer = document.getElementById('chat-container');
-
-        // 1. Append Operator message
-        const opDiv = document.createElement('div');
-        opDiv.className = 'space-y-2 max-w-2xl mb-6';
-        opDiv.innerHTML = `
-            <div class="text-white/40 text-[11px] font-bold tracking-widest">OPERATOR</div>
-            <div class="pl-4 border-l-2 border-white/20 text-white/80 leading-relaxed uppercase">
-                ${query}
-            </div>
-        `;
-        chatContainer.appendChild(opDiv);
-
-        // 2. Select next suspect (cycle through speaker order)
-        const nextSpeakerIndex = (currentSpeakerIndex + 1) % suspects.length;
-        setActiveSpeaker(nextSpeakerIndex);
-
-        // 3. Append Subject response with appropriate color matching active state
-        const target = suspects[nextSpeakerIndex];
-        const randomMsg = target.responses[Math.floor(Math.random() * target.responses.length)];
-
-        setTimeout(() => {
-            const responseDiv = document.createElement('div');
-            responseDiv.className = 'space-y-2 max-w-3xl mb-6';
-            responseDiv.innerHTML = `
-                <div class="flex items-center gap-2 ${target.colorClass} text-[11px] font-bold tracking-widest uppercase">
-                    <span class="material-symbols-outlined text-[14px]">${target.icon}</span> ${target.name}
-                </div>
-                <div class="pl-4 border-l-2 ${target.borderColorClass} ${target.colorClass} ${target.glowClass} leading-relaxed">
-                    ${randomMsg}
-                </div>
-            `;
-            chatContainer.appendChild(responseDiv);
-            
-            // Auto-scroll chat
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }, 500);
-
-        // Auto-scroll chat
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    // Vote confirmation handler showing terminal-style feedback
-    function voteForSubject(index) {
-        const target = suspects[index];
-        const chatContainer = document.getElementById('chat-container');
-        if (!chatContainer) return;
         
-        // Native audio pitch sweep feedback
         try {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(450, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(950, audioCtx.currentTime + 0.15);
-            gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.2);
-        } catch(e) {}
-
-        const voteDiv = document.createElement('div');
-        voteDiv.className = 'space-y-2 max-w-2xl mb-6';
-        
-        voteDiv.innerHTML = `
-            <div class="text-error text-[11px] font-bold tracking-widest uppercase">AUDIT_DE_COUPLING_SEQUENCE</div>
-            <div class="pl-4 border-l-2 border-error text-error/80 leading-relaxed uppercase">
-                VOTE CAST FOR <span class="font-bold underline text-white">${target.name}</span>. SYSTEM INTEGRITY VERIFYING TARGET CONFORMITY...
-            </div>
-        `;
-        chatContainer.appendChild(voteDiv);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+            inputEl.setAttribute('disabled', 'true');
+            const res = await fetch('/api/game/message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: query })
+            });
+            const data = await res.json();
+            if (data.success) {
+                await fetchGameState();
+            } else {
+                alert("Error sending message: " + data.error);
+            }
+        } catch (err) {
+            console.error("Error submitting query:", err);
+        } finally {
+            inputEl.removeAttribute('disabled');
+            inputEl.focus();
+        }
     }
 
-    // Initialize first speaker state on page load
-    setActiveSpeaker(0);
+    async function voteForSubject(index) {
+        const suspect = suspects[index];
+        const playerInState = currentGameState.players.find(p => p.name === suspect.name);
+        if (!playerInState) return;
+        
+        let reasoning = prompt(`ENTER DE-COUPLING REASONING FOR ${suspect.name}:`, "Suspicious behavioral latency mismatch.");
+        if (reasoning === null) return;
+        if (!reasoning.trim()) reasoning = "Suspicious behavioral latency mismatch.";
+        
+        try {
+            const res = await fetch('/api/game/submit-vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetId: playerInState.id, reasoning: reasoning })
+            });
+            const data = await res.json();
+            if (data.success) {
+                playSynthSound('vote');
+                // Cast all LLM votes and proceed
+                await stepLlmVotes();
+            } else {
+                alert("Vote submission failed: " + data.error);
+            }
+        } catch (err) {
+            console.error("Error voting:", err);
+        }
+    }
+
+    async function stepLlmVotes() {
+        try {
+            const res = await fetch('/api/game/step-llm-votes', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                await fetchGameState();
+            }
+        } catch (err) {
+            console.error("Error stepping LLM votes:", err);
+        }
+    }
+
+    async function continueAfterReveal() {
+        try {
+            const res = await fetch('/api/game/continue', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                await fetchGameState();
+            }
+        } catch (err) {
+            console.error("Error continuing game:", err);
+        }
+    }
+
+    async function resetGame() {
+        try {
+            const res = await fetch('/api/game/reset', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                window.location.reload();
+            }
+        } catch (err) {
+            console.error("Error resetting game:", err);
+        }
+    }
+
+    // Initialize state on page load and begin polling
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchGameState();
+        setInterval(fetchGameState, 1500);
+    });
 </script>
 </body></html>

@@ -193,7 +193,7 @@ async function handleApi(req, res) {
       gameState.topic = customTopic || RANDOM_TOPICS[Math.floor(Math.random() * RANDOM_TOPICS.length)];
 
       // Construct Players List: 4 LLMs, 1 Human
-      const llmNames = ["Alpha-Core", "Beta-Synth", "Gamma-Net", "Delta-Node"];
+      const llmNames = ["KAICHENG", "HAIREN", "SHERRAI", "KAIZUKI"];
       
       // Shuffle names to avoid predictability
       const shuffledNames = llmNames.sort(() => Math.random() - 0.5);

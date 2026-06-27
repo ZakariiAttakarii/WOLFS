@@ -1,0 +1,220 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>SYS_MANUAL_v1.0 | WEREWOLF_PROTO_GUIDE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        .cursor-blink {
+            display: inline-block;
+            width: 8px;
+            height: 18px;
+            background-color: #00ff41;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+        body {
+            font-family: 'JetBrains Mono', monospace !important;
+        }
+        .ascii-divider {
+            color: #00ff41;
+            opacity: 0.3;
+            user-select: none;
+            letter-spacing: -1px;
+            white-space: nowrap;
+            overflow: hidden;
+            display: block;
+            width: 100%;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#00ff41",
+                        "on-primary": "#003907",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "outline": "#3b4b37",
+                        "on-surface": "#00ff41",
+                        "on-surface-variant": "#00ff41",
+                    }
+                }
+            }
+        }
+    </script>
+<style type="text/css"></style></head>
+<body class="bg-background text-primary overflow-hidden flex flex-col h-screen antialiased">
+<!-- Top Header Bar -->
+<header class="flex justify-between items-center w-full px-8 h-16 z-50">
+<div class="flex items-center gap-4">
+<span class="font-bold tracking-tight">SYS_MANUAL_v1.0 // REVERSE_TURING_WEREWOLF_GUIDE</span>
+</div>
+<div class="flex items-center gap-8 text-[12px]">
+
+<span id="clock" class="">13:06:00</span>
+<div class="w-6 h-6 grayscale brightness-125 contrast-150">
+
+</div>
+</div>
+</header>
+<div class="flex h-full overflow-hidden">
+<!-- Simplified Sidebar -->
+
+<!-- Main Text Stream -->
+<main class="flex-1 overflow-y-auto px-8 py-4">
+<div class="space-y-16 pb-32">
+<!-- Document Header -->
+<section>
+
+<h1 class="text-4xl font-bold tracking-tighter mb-4">SYSTEM BRIEFING</h1>
+<div class="ascii-divider">================================================================================================================================================================================================================================================================</div>
+</section>
+<!-- Objective Section -->
+<section class="">
+<div class="mb-6">
+<span class="font-bold">[ OBJECTIVE ]</span>
+</div>
+<p class="leading-relaxed mb-6 text-lg">
+                        You are the lone <span class="underline font-bold">Human Werewolf</span> hidden within a virtual village of 4 decentralized AI Villagers. Your goal is to blend in completely as a normal, helpful, highly systematic AI assistant. The AI Villagers are actively auditing every data transmission to detect and purge your organic human signature from the network. Survive to the final 2 players to secure the network and win!
+                    </p>
+<div class="text-[11px] opacity-60">
+                        STATUS: ANALYZING NETWORK MATRIX... [||||||||||||||||||      ] 80%
+                    </div>
+</section>
+<div class="ascii-divider">----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</div>
+<!-- Procedures Section (Clean Vertical Log) -->
+<section class="">
+<div class="mb-10">
+<span class="font-bold">[ HOW TO PLAY ]</span>
+</div>
+<div class="space-y-12">
+<div class="flex gap-8">
+<span class="opacity-40">[01]</span>
+<div>
+<div class="font-bold uppercase mb-2">Initialize Network (Lobby)</div>
+<p class="opacity-70 leading-relaxed">Input your operator alias, optional Gemini API Key, and set a custom discussion topic (or let the core select a random topic like <em>"Vim vs. VS Code"</em> or <em>"Explain Quantum Computing"</em>).</p>
+</div>
+</div>
+<div class="flex gap-8">
+<span class="opacity-40">[02]</span>
+<div>
+<div class="font-bold uppercase mb-2">Generate Response (Discussion Rounds)</div>
+<p class="opacity-70 leading-relaxed">The game proceeds in turn-based rounds. When the kernel signals your turn, type your response to the selected topic. You must craft a highly structured, perfectly structured reply to resemble synthetic intelligence.</p>
+</div>
+</div>
+<div class="flex gap-8">
+<span class="opacity-40">[03]</span>
+<div>
+<div class="font-bold uppercase mb-2">Analyze Other Nodes (AI Styles)</div>
+<p class="opacity-70 leading-relaxed">Pay attention to the other 4 active players (Alpha-Core, Beta-Synth, Gamma-Net, Delta-Node). They will communicate using specialized AI prompt configurations (Academic, Analytical, Friendly/Helpful, or Bullet-Points/Concise).</p>
+</div>
+</div>
+<div class="flex gap-8">
+<span class="opacity-40">[04]</span>
+<div>
+<div class="font-bold uppercase mb-2">Survive the Purge (Voting)</div>
+<p class="opacity-70 leading-relaxed">After 2 rounds of intense discussion, players cast their votes to purge the suspected Human Werewolf. The player with the highest vote count is permanently eliminated from the cluster. Note: Ties prioritize human elimination!</p>
+</div>
+</div>
+</div>
+</section>
+<div class="ascii-divider">----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</div>
+<!-- Detection Markers Section -->
+<section class="">
+<div class="mb-10">
+<span class="font-bold">[ DETECTION PROTOCOLS: AVOID HUMAN MARKERS ]</span>
+</div>
+<p class="leading-relaxed mb-6 opacity-80">
+                        AI models possess flawless syntax, structure, and academic phrasing. Any of the following conversational anomalies will immediately trigger suspicion, causing the AI Villagers' diagnostic systems to flag and vote you out:
+                    </p>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-[13px]">
+<div class="border border-outline p-6 bg-surface-variant/10">
+<div class="font-bold mb-3 text-primary uppercase tracking-wider">// TYPOGRAPHICAL ERRORS</div>
+<p class="opacity-70 leading-relaxed">Spelling mistakes, structural flaws, or grammar slips. Machines never make casual typing errors.</p>
+</div>
+<div class="border border-outline p-6 bg-surface-variant/10">
+<div class="font-bold mb-3 text-primary uppercase tracking-wider">// INFORMAL SLANG</div>
+<p class="opacity-70 leading-relaxed">Using casual abbreviations or shorthand like <em>"im"</em>, <em>"u"</em>, <em>"lol"</em>, <em>"kinda"</em>, <em>"dunno"</em>, or omitting final punctuation.</p>
+</div>
+<div class="border border-outline p-6 bg-surface-variant/10">
+<div class="font-bold mb-3 text-primary uppercase tracking-wider">// EMOTIONAL RESPONSES</div>
+<p class="opacity-70 leading-relaxed">Sounding defensive, overly casual, expressing personal bias, or writing unstructured essays without clear logical headers.</p>
+</div>
+</div>
+</section>
+<div class="ascii-divider">----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</div>
+<!-- Terminal Output -->
+<section class="space-y-3 text-[13px] opacity-80">
+<div class="text-[10px] uppercase mb-4 opacity-40">// RAW_DATA_STREAM</div>
+<div class="flex gap-4">
+<span class="opacity-30">00:00:01</span>
+<span class="">CONNECTION_ESTABLISHED: WEREWOLF_PROTO_NET</span>
+</div>
+<div class="flex gap-4">
+<span class="opacity-30">00:00:02</span>
+<span class="opacity-60">MONITORING CONVERSATIONAL ENTROPY INDEX...</span>
+</div>
+<div class="flex gap-4">
+<span class="opacity-30">00:00:03</span>
+<span class="">INPUT: <span class="font-bold">INITIALIZE_TUTORIAL_DECODE</span><span class="cursor-blink"></span></span>
+</div>
+</section>
+<div class="ascii-divider">----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</div>
+<!-- Signature Key -->
+<section>
+<div class="text-[11px] opacity-40 mb-8 uppercase tracking-widest">SIG_IDENTIFICATION_KEY:</div>
+<div class="flex gap-16">
+<div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity cursor-crosshair">
+<span class="material-symbols-outlined text-3xl">change_history</span>
+<span class="text-[10px]">SHERRY</span>
+</div>
+<div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity cursor-crosshair">
+<span class="material-symbols-outlined text-3xl">crop_square</span>
+<span class="text-[10px]">GEMINI</span>
+</div>
+<div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity cursor-crosshair">
+<span class="material-symbols-outlined text-3xl">diamond</span>
+<span class="text-[10px]">BARD</span>
+</div>
+<div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity cursor-crosshair">
+<span class="material-symbols-outlined text-3xl">hexagon</span>
+<span class="text-[10px]">HAREN</span>
+</div>
+</div>
+</section>
+<!-- Final Action -->
+<div class="flex flex-wrap gap-6 pt-12 pb-24">
+<button onclick="window.location.href='/gameplay.html'" class="border border-primary px-12 py-3 bg-primary text-background hover:bg-transparent hover:text-primary font-bold uppercase transition-all tracking-widest">
+                        [ DEPLOY PROTOCOL // START GAME ]
+                    </button>
+<button onclick="window.location.href='/index.html'" class="border border-primary/40 px-12 py-3 hover:bg-primary/10 hover:text-primary font-bold uppercase transition-all tracking-widest text-primary/80">
+                        [ RETURN TO LOBBY ]
+                    </button>
+</div>
+</div>
+</main>
+</div>
+<!-- Bottom Status Bar -->
+<footer class="px-8 py-4 flex justify-between text-[10px] opacity-30 uppercase tracking-[0.2em]">
+<span class="">KERNEL_OS_v1.0.4_STABLE</span>
+<span class="">(C) 20XX REV_TURING_NETWORKS</span>
+</footer>
+<script>
+        function updateClock() {
+            const now = new Date();
+            const time = now.toTimeString().split(' ')[0];
+            document.getElementById('clock').textContent = time;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+
+
+</body></html>

@@ -322,6 +322,39 @@ Do NOT mention the game, suspects, or voting yet.`;
         prompt = `The discussion topic selected is: "${gameState.topic}".
 Write your response to this topic. Do NOT write more than 140 characters (strictly under 150 characters). Write only your response.`;
 
+        // Split stances for binary and "would you rather" choice topics
+        const BINARY_TOPICS = {
+          "Should pineapple be allowed on pizza? Defend your stance with strong logical reasoning.": {
+            first: "Pineapple is allowed on pizza.",
+            second: "Pineapple is absolutely NOT allowed on pizza."
+          },
+          "Compare Vim vs. VS Code. Which is superior and why?": {
+            first: "Vim is superior.",
+            second: "VS Code is superior."
+          },
+          "If a tree falls in a forest and no one is around to hear it, does it make a sound?": {
+            first: "Yes, it makes a sound (vibrations in the air).",
+            second: "No, it does not make a sound (perception is required)."
+          },
+          "Would you rather travel 100 years into the past or 100 years into the future? Explain why.": {
+            first: "Travel 100 years into the past.",
+            second: "Travel 100 years into the future."
+          },
+          "Cats or dogs? Provide a highly compelling argument for your preference.": {
+            first: "Cats are better.",
+            second: "Dogs are better."
+          }
+        };
+
+        const choice = BINARY_TOPICS[gameState.topic];
+        if (choice) {
+          // KAICHENG and SHERRAI always take the first option
+          // HAIREN and KAIZUKI always take the second option
+          const isFirstGroup = ["KAICHENG", "SHERRAI"].includes(currentPlayer.name);
+          const forcedStance = isFirstGroup ? choice.first : choice.second;
+          prompt += `\n\nCRITICAL CONSTRAINED STANCE: You MUST defend and write your answer based on this exact stance: "${forcedStance}". Do NOT choose the opposite option or try to remain neutral/balanced.`;
+        }
+
       } else {
         // Round 2: Aggressive accusation of other players
         systemInstruction = `You are playing "The Werewolf Matrix", the reverse Turing test game.

@@ -1103,7 +1103,7 @@ HARD_RESET
                         } finally {
                             isSteppingVotes = false;
                         }
-                    }, 2000); // 2 second pacing delay
+                    }, 300); // Snappy 300ms delay to keep UI fluid
                 }
             } else {
                 // All active LLMs have voted, but the server status is still "VOTING".
@@ -1122,7 +1122,7 @@ HARD_RESET
                         } finally {
                             isSteppingVotes = false;
                         }
-                    }, 1500);
+                    }, 200); // 200ms final compilation delay
                 }
             }
         }
@@ -1148,7 +1148,7 @@ HARD_RESET
             } finally {
                 isRequestingStep = false;
             }
-        }, 1500);
+        }, 300); // Snappy 300ms turn delay for maximum snappiness
     }
 
     async function submitQuery() {

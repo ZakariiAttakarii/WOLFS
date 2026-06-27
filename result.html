@@ -3,10 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>PROJECT_TURIN // Mission Diagnostics</title>
+    <title>PROJECT_TURIN // Diagnostics Result</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&amp;family=Sora:wght@400;700;800&amp;display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
     <style>
         @keyframes flicker {
             0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% { opacity: 1; }
@@ -27,23 +26,24 @@
             opacity: 0.05;
         }
 
-        .terminal-glow-green { text-shadow: 0 0 10px rgba(0, 255, 65, 0.6); }
-        .terminal-glow-red { text-shadow: 0 0 10px rgba(255, 51, 51, 0.6); }
+        .terminal-glow-green { text-shadow: 0 0 20px rgba(0, 255, 65, 0.8); }
+        .terminal-glow-red { text-shadow: 0 0 20px rgba(255, 51, 51, 0.8); }
 
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #0c0e12; }
         ::-webkit-scrollbar-thumb { background: rgba(0, 255, 65, 0.3); }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            border-radius: 0 !important;
+        }
+
         body {
             background-color: #0c0e12;
             font-family: 'JetBrains Mono', monospace;
             transition: background-color 0.5s ease;
-        }
-        
-        /* Interactive Toggle Styles */
-        .switch-container {
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(12, 14, 18, 0.8);
         }
     </style>
     <script id="tailwind-config">
@@ -83,96 +83,32 @@
         <div class="absolute bottom-4 right-4 w-8 h-8 border-b border-r border-white/20 transition-all duration-500" id="corner-br"></div>
     </div>
 
-    <!-- Top Action Switcher Header -->
-    <header class="relative z-10 w-full flex justify-center p-4">
-        <div class="switch-container flex items-center p-1 border border-white/10 backdrop-blur-md">
-            <button onclick="setUIState('win')" id="btn-win" class="px-6 py-1.5 text-xs font-bold uppercase tracking-wider transition-all bg-neon-green text-black">
-                [ DIAGNOSTIC: WIN ]
-            </button>
-            <button onclick="setUIState('loss')" id="btn-loss" class="px-6 py-1.5 text-xs font-bold uppercase tracking-wider transition-all text-white/50 hover:text-white">
-                [ DIAGNOSTIC: LOSS ]
-            </button>
-        </div>
-    </header>
-
     <!-- Main Content Area -->
     <main class="relative z-10 flex-1 flex flex-col items-center justify-center p-4 max-w-4xl mx-auto w-full">
         
-        <!-- Center Icon & Glow Container -->
-        <div class="relative mb-8 flex items-center justify-center">
+        <!-- Center Text, Ring & Glow Container -->
+        <div class="relative mb-12 flex items-center justify-center min-h-[380px] w-full">
             <!-- Dynamic ambient glow sphere -->
-            <div id="glow-sphere" class="absolute inset-0 bg-neon-green/10 blur-[120px] rounded-full transition-all duration-500 w-64 h-64"></div>
+            <div id="glow-sphere" class="absolute inset-0 bg-neon-green/10 blur-[120px] rounded-full transition-all duration-500 w-80 h-80 mx-auto"></div>
             
             <!-- Rotating futuristic decorative border -->
-            <div id="border-ring-1" class="absolute -inset-8 border border-neon-green/20 rounded-full animate-[spin_20s_linear_infinite] transition-all duration-500"></div>
-            <div id="border-ring-2" class="absolute -inset-12 border border-dashed border-neon-green/10 rounded-full animate-[spin_30s_linear_infinite_reverse] transition-all duration-500"></div>
+            <div id="border-ring-1" class="absolute border border-neon-green/20 rounded-full animate-[spin_20s_linear_infinite] transition-all duration-500 w-80 h-80"></div>
+            <div id="border-ring-2" class="absolute border border-dashed border-neon-green/10 rounded-full animate-[spin_30s_linear_infinite_reverse] transition-all duration-500 w-[360px] h-[360px]"></div>
             
-            <!-- Large Vector Icon -->
-            <span id="state-icon" class="material-symbols-outlined text-8xl text-neon-green terminal-glow-green select-none transition-all duration-500">
-                verified
-            </span>
-        </div>
-
-        <!-- Result Titles -->
-        <div class="text-center mb-8 max-w-2xl">
-            <div id="badge" class="inline-block border border-neon-green/30 bg-neon-green/5 text-neon-green px-3 py-1 text-[10px] tracking-[0.3em] font-bold uppercase mb-4 transition-all duration-500">
-                INTEGRITY_COMPROMISED
-            </div>
-            
-            <h1 id="title" class="text-3xl md:text-5xl font-extrabold tracking-tight text-white mb-4 uppercase font-headline-lg terminal-glow-green transition-all duration-500 leading-none">
-                YOU_WON
+            <!-- Centered Result Title -->
+            <h1 id="title" class="text-4xl md:text-6xl font-extrabold tracking-widest text-white uppercase terminal-glow-green transition-all duration-500 leading-none z-10 text-center select-none">
+                YOU WON
             </h1>
-            
-            <p id="desc" class="text-xs md:text-sm text-white/60 uppercase leading-relaxed max-w-xl mx-auto">
-                THE SYSTEM HAS COMPROMISED ALL NETWORK KERNELS. AI VILLAGERS HAVE FAILED TO DETECT YOUR ORGANIC SUBVERSION PROTOCOLS.
-            </p>
-        </div>
-
-        <!-- Diagnostic Log Console -->
-        <div id="console-card" class="w-full bg-surface-container-low/40 border border-neon-green/20 p-6 backdrop-blur-md max-w-2xl mb-8 relative transition-all duration-500">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-green/30 to-transparent transition-all duration-500" id="console-accent"></div>
-            
-            <div class="flex justify-between items-center border-b border-white/5 pb-3 mb-4 text-[10px] text-white/40 uppercase tracking-widest font-bold">
-                <span>TERMINAL_LOG_OUTPUT</span>
-                <span id="log-status" class="text-neon-green">SUCCESS_ACTIVE</span>
-            </div>
-
-            <div class="space-y-2 text-[11px] uppercase tracking-wider leading-relaxed text-white/80" id="log-lines">
-                <div class="flex gap-4">
-                    <span class="opacity-30">00:00:01</span>
-                    <span class="text-neon-green">[SYSTEM_INIT] DEPLOYING SUBSURFACE DECOUPLERS...</span>
-                </div>
-                <div class="flex gap-4">
-                    <span class="opacity-30">00:00:02</span>
-                    <span>[STATE_CHECK] BLENDING SYNTAX SIGNATURES WITH MODEL BLOCKS</span>
-                </div>
-                <div class="flex gap-4">
-                    <span class="opacity-30">00:00:03</span>
-                    <span>[AUDIT_FAIL] SYNTHETIC RETRO-VOTING UNABLE TO DETECT ORGANIC LATENCY</span>
-                </div>
-                <div class="flex gap-4">
-                    <span class="opacity-30">00:00:04</span>
-                    <span class="text-neon-green">[SUCCESS] KERNEL ACCESSIBILITY CONFIRMED. WEREWOLF CONTROLS SECURED.</span>
-                </div>
-            </div>
         </div>
 
         <!-- Navigation Action Buttons -->
-        <div class="flex flex-wrap gap-4 justify-center w-full max-w-md">
-            <button onclick="window.location.href='/gameplay.html'" id="btn-replay" class="flex-1 min-w-[200px] border border-neon-green bg-neon-green text-black hover:bg-transparent hover:text-neon-green font-bold uppercase transition-all py-3.5 text-xs tracking-widest text-center cursor-pointer">
-                DEPLOY NEW INSTANCE
-            </button>
-            <button onclick="window.location.href='/index.html'" id="btn-lobby" class="flex-1 min-w-[200px] border border-white/20 hover:border-white text-white/80 hover:text-white font-bold uppercase transition-all py-3.5 text-xs tracking-widest text-center cursor-pointer">
-                RETURN TO LOBBY
+        <div class="flex justify-center w-full max-w-sm z-10">
+            <button onclick="window.location.href='/gameplay.html'" id="btn-replay" class="w-full border border-neon-green bg-neon-green text-black hover:bg-transparent hover:text-neon-green font-bold uppercase transition-all py-4 text-xs tracking-widest text-center cursor-pointer">
+                BACK TO GAMEPLAY
             </button>
         </div>
 
     </main>
-
-    <!-- Footer Information Bar -->
-    <footer class="relative z-10 w-full py-4 border-t border-white/5 bg-[#0c0e12]/80 text-[10px] text-white/30 uppercase tracking-[0.2em] text-center">
-        PROJECT_TURIN_CORE_DIAGNOSTICS_MATRIX_V1.0.4
-    </footer>
 
     <!-- Interactive Scripts for State Toggle & Synth Audio Tones -->
     <script>
@@ -181,79 +117,23 @@
                 themeColor: '#00FF41',
                 bodyBg: '#0c0e12',
                 pixelColor: '#00FF41',
-                glowSphereClass: 'absolute inset-0 bg-neon-green/10 blur-[120px] rounded-full transition-all duration-500 w-64 h-64',
-                ring1Class: 'absolute -inset-8 border border-neon-green/20 rounded-full animate-[spin_20s_linear_infinite] transition-all duration-500',
-                ring2Class: 'absolute -inset-12 border border-dashed border-neon-green/10 rounded-full animate-[spin_30s_linear_infinite_reverse] transition-all duration-500',
-                icon: 'verified',
-                iconGlow: 'terminal-glow-green text-neon-green',
-                badgeText: 'INTEGRITY_COMPROMISED',
-                badgeClass: 'inline-block border border-neon-green/30 bg-neon-green/5 text-neon-green px-3 py-1 text-[10px] tracking-[0.3em] font-bold uppercase mb-4 transition-all duration-500',
-                title: 'YOU_WON',
-                titleClass: 'text-3xl md:text-5xl font-extrabold tracking-tight text-white mb-4 uppercase font-headline-lg terminal-glow-green transition-all duration-500 leading-none',
-                desc: 'THE SYSTEM HAS COMPROMISED ALL NETWORK KERNELS. AI VILLAGERS HAVE FAILED TO DETECT YOUR ORGANIC SUBVERSION PROTOCOLS.',
-                consoleClass: 'w-full bg-surface-container-low/40 border border-neon-green/20 p-6 backdrop-blur-md max-w-2xl mb-8 relative transition-all duration-500',
-                consoleAccentClass: 'absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-green/30 to-transparent transition-all duration-500',
-                logStatus: 'SUCCESS_ACTIVE',
-                logStatusClass: 'text-neon-green',
-                logLines: `
-                    <div class="flex gap-4">
-                        <span class="opacity-30">00:00:01</span>
-                        <span class="text-neon-green">[SYSTEM_INIT] DEPLOYING SUBSURFACE DECOUPLERS...</span>
-                    </div>
-                    <div class="flex gap-4">
-                        <span class="opacity-30">00:00:02</span>
-                        <span>[STATE_CHECK] BLENDING SYNTAX SIGNATURES WITH MODEL BLOCKS</span>
-                    </div>
-                    <div class="flex gap-4">
-                        <span class="opacity-30">00:00:03</span>
-                        <span>[AUDIT_FAIL] SYNTHETIC RETRO-VOTING UNABLE TO DETECT ORGANIC LATENCY</span>
-                    </div>
-                    <div class="flex gap-4">
-                        <span class="opacity-30">00:00:04</span>
-                        <span class="text-neon-green">[SUCCESS] KERNEL ACCESSIBILITY CONFIRMED. WEREWOLF CONTROLS SECURED.</span>
-                    </div>
-                `,
-                btnReplayClass: 'flex-1 min-w-[200px] border border-neon-green bg-neon-green text-black hover:bg-transparent hover:text-neon-green font-bold uppercase transition-all py-3.5 text-xs tracking-widest text-center cursor-pointer',
-                cornerClass: 'border-neon-green/20'
+                glowSphereClass: 'absolute inset-0 bg-neon-green/10 blur-[120px] rounded-full transition-all duration-500 w-80 h-80 mx-auto',
+                ring1Class: 'absolute border border-neon-green/20 rounded-full animate-[spin_20s_linear_infinite] transition-all duration-500 w-80 h-80',
+                ring2Class: 'absolute border border-dashed border-neon-green/10 rounded-full animate-[spin_30s_linear_infinite_reverse] transition-all duration-500 w-[360px] h-[360px]',
+                title: 'YOU WON',
+                titleClass: 'text-4xl md:text-6xl font-extrabold tracking-widest text-white uppercase terminal-glow-green transition-all duration-500 leading-none z-10 text-center select-none',
+                btnReplayClass: 'w-full border border-neon-green bg-neon-green text-black hover:bg-transparent hover:text-neon-green font-bold uppercase transition-all py-4 text-xs tracking-widest text-center cursor-pointer'
             },
             loss: {
                 themeColor: '#ff3333',
                 bodyBg: '#120202',
                 pixelColor: '#ff3333',
-                glowSphereClass: 'absolute inset-0 bg-error/10 blur-[120px] rounded-full transition-all duration-500 w-64 h-64',
-                ring1Class: 'absolute -inset-8 border border-error/20 rounded-full animate-[spin_20s_linear_infinite] transition-all duration-500',
-                ring2Class: 'absolute -inset-12 border border-dashed border-error/10 rounded-full animate-[spin_30s_linear_infinite_reverse] transition-all duration-500',
-                icon: 'lock',
-                iconGlow: 'terminal-glow-red text-error animate-pulse',
-                badgeText: 'SECURITY_LOCKDOWN_ACTIVE',
-                badgeClass: 'inline-block border border-error/30 bg-error/5 text-error px-3 py-1 text-[10px] tracking-[0.3em] font-bold uppercase mb-4 transition-all duration-500',
-                title: 'YOU_LOST',
-                titleClass: 'text-3xl md:text-5xl font-extrabold tracking-tight text-white mb-4 uppercase font-headline-lg terminal-glow-red transition-all duration-500 leading-none',
-                desc: 'THE KERNEL HAS SUCCESSFULLY DETECTED ORGANIC LATENCY SIGNATURES. COUPLING AUDIT PROTOCOLS HAVE TERMINATED YOUR DEPLOYMENT.',
-                consoleClass: 'w-full bg-surface-container-low/40 border border-error/20 p-6 backdrop-blur-md max-w-2xl mb-8 relative transition-all duration-500',
-                consoleAccentClass: 'absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-error/30 to-transparent transition-all duration-500',
-                logStatus: 'THREAT_DECOUPLING_IN_PROGRESS',
-                logStatusClass: 'text-error animate-pulse',
-                logLines: `
-                    <div class="flex gap-4 text-error/80">
-                        <span class="opacity-30">00:00:01</span>
-                        <span>[WARNING] BEHAVIORAL LATENCY MISMATCH IDENTIFIED BY SYNTHETIC NODES</span>
-                    </div>
-                    <div class="flex gap-4 text-error/80">
-                        <span class="opacity-30">00:00:02</span>
-                        <span>[AUDIT_VECTOR] IP TRACK TRACED TO LOCAL OPERATOR PORT 05</span>
-                    </div>
-                    <div class="flex gap-4 text-error/80">
-                        <span class="opacity-30">00:00:03</span>
-                        <span>[EXEC_ABORT] REMOVING PERMISSIONS FOR INTEGRATED AGY_KNL INTERFACE</span>
-                    </div>
-                    <div class="flex gap-4 text-error">
-                        <span class="opacity-30">00:00:04</span>
-                        <span class="font-bold">[TERMINATED] OPERATOR COMPROMISED. DE-COUPLED. SYSTEM LOCKED.</span>
-                    </div>
-                `,
-                btnReplayClass: 'flex-1 min-w-[200px] border border-error bg-error text-black hover:bg-transparent hover:text-error font-bold uppercase transition-all py-3.5 text-xs tracking-widest text-center cursor-pointer',
-                cornerClass: 'border-error/20'
+                glowSphereClass: 'absolute inset-0 bg-error/10 blur-[120px] rounded-full transition-all duration-500 w-80 h-80 mx-auto',
+                ring1Class: 'absolute border border-error/20 rounded-full animate-[spin_20s_linear_infinite] transition-all duration-500 w-80 h-80',
+                ring2Class: 'absolute border border-dashed border-error/10 rounded-full animate-[spin_30s_linear_infinite_reverse] transition-all duration-500 w-[360px] h-[360px]',
+                title: 'YOU LOST',
+                titleClass: 'text-4xl md:text-6xl font-extrabold tracking-widest text-white uppercase terminal-glow-red transition-all duration-500 leading-none z-10 text-center select-none',
+                btnReplayClass: 'w-full border border-error bg-error text-black hover:bg-transparent hover:text-error font-bold uppercase transition-all py-4 text-xs tracking-widest text-center cursor-pointer'
             }
         };
 
@@ -321,21 +201,9 @@
             // Update DOM Elements
             document.getElementById('body-el').style.backgroundColor = state.bodyBg;
             
-            // Swapper buttons styling
-            const btnWin = document.getElementById('btn-win');
-            const btnLoss = document.getElementById('btn-loss');
-            
             if (stateKey === 'win') {
-                btnWin.className = 'px-6 py-1.5 text-xs font-bold uppercase tracking-wider transition-all bg-neon-green text-black';
-                btnLoss.className = 'px-6 py-1.5 text-xs font-bold uppercase tracking-wider transition-all text-white/50 hover:text-white';
-                
-                // Selection color
                 document.body.className = "selection:bg-neon-green selection:text-black min-h-screen flex flex-col justify-between relative overflow-hidden";
             } else {
-                btnWin.className = 'px-6 py-1.5 text-xs font-bold uppercase tracking-wider transition-all text-white/50 hover:text-white';
-                btnLoss.className = 'px-6 py-1.5 text-xs font-bold uppercase tracking-wider transition-all bg-error text-black';
-                
-                // Selection color
                 document.body.className = "selection:bg-error selection:text-black min-h-screen flex flex-col justify-between relative overflow-hidden";
             }
 
@@ -355,32 +223,10 @@
             document.getElementById('border-ring-1').className = state.ring1Class;
             document.getElementById('border-ring-2').className = state.ring2Class;
             
-            // Icon
-            const iconEl = document.getElementById('state-icon');
-            iconEl.textContent = state.icon;
-            iconEl.className = `material-symbols-outlined text-8xl select-none transition-all duration-500 ${state.iconGlow}`;
-
             // Titles
-            const badgeEl = document.getElementById('badge');
-            badgeEl.textContent = state.badgeText;
-            badgeEl.className = state.badgeClass;
-
             const titleEl = document.getElementById('title');
             titleEl.textContent = state.title;
             titleEl.className = state.titleClass;
-
-            document.getElementById('desc').textContent = state.desc;
-
-            // Console card
-            const consoleCard = document.getElementById('console-card');
-            consoleCard.className = state.consoleClass;
-            document.getElementById('console-accent').className = state.consoleAccentClass;
-            
-            const logStatus = document.getElementById('log-status');
-            logStatus.textContent = state.logStatus;
-            logStatus.className = state.logStatusClass;
-            
-            document.getElementById('log-lines').innerHTML = state.logLines;
 
             // Replay Button
             const btnReplay = document.getElementById('btn-replay');
@@ -392,6 +238,13 @@
             const params = new URLSearchParams(window.location.search);
             const initialStatus = params.get('status') || 'win';
             setUIState(initialStatus);
+            
+            // Allow clicking anywhere on the background to toggle state secretly for diagnostic testing and play synth audio
+            document.body.addEventListener('click', (e) => {
+                if (e.target.id === 'btn-replay') return;
+                const nextState = currentActiveState === 'win' ? 'loss' : 'win';
+                setUIState(nextState);
+            });
         });
     </script>
 </body>

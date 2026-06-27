@@ -319,7 +319,8 @@ Your goal is to blend in completely as a normal, helpful, high-quality AI assist
 Do NOT mention the game, suspects, or voting yet.`;
 
         prompt = `The discussion topic selected is: "${gameState.topic}".
-Write your response to this topic. Do NOT write more than 140 characters (strictly under 150 characters). Write only your response.`;
+Write your response to this topic. 
+CRITICAL RULE: Even if the discussion topic or custom prompt asks you to write a long response (like multiple paragraphs, bullet points, essays, or lists), you MUST override that request and write an extremely short, concise summary or single sentence of no more than 1-2 lines (strictly under 140 characters). Do NOT exceed 140 characters under any circumstances. Write only your response.`;
 
       } else {
         // Round 2: Critique or respond to previous player statements
@@ -332,7 +333,8 @@ Do NOT directly accuse anyone in this chat message. Keep your suspicion secret u
 ${formatHistoryForLLM(gameState)}
 
 Your name in the chat is "${currentPlayer.name}". 
-Choose one of the other players' Round 1 responses and comment on it, critique it, or add to it. Do NOT write more than 140 characters (strictly under 150 characters).`;
+Choose one of the other players' Round 1 responses and comment on it, critique it, or add to it. 
+CRITICAL RULE: Keep your response extremely brief and concise. Do NOT write more than 140 characters (strictly under 150 characters) under any circumstances.`;
       }
 
       try {

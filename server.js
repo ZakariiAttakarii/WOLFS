@@ -276,7 +276,7 @@ Your goal is to blend in completely as a normal, helpful, high-quality AI assist
 Do NOT mention the game, suspects, or voting yet.`;
 
         prompt = `The discussion topic selected is: "${gameState.topic}".
-Write your response to this topic. Do NOT write more than 130 words. Write only your response.`;
+Write your response to this topic. Do NOT write more than 280 characters. Write only your response.`;
 
       } else {
         // Round 2: Critique or respond to previous player statements

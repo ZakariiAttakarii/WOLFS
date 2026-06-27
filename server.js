@@ -101,7 +101,7 @@ async function callGemini(prompt, systemInstruction) {
     contents: prompt,
     config: {
       systemInstruction: systemInstruction,
-      temperature: 1.8,
+      temperature: 2.0,
       maxOutputTokens: 10000,
       responseMimeType: isJson ? "application/json" : undefined
     }

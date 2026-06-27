@@ -103,10 +103,6 @@
 <span class="text-xs font-bold tracking-[0.2em] uppercase terminal-glow-green flicker-animation text-neon-green">PROJECT_TURIN // KERNEL STATUS: INITIALIZING // ROUND 1<br></span>
 </div>
 <div class="flex items-center gap-6">
-<div class="flex items-center gap-3">
-<span class="text-[9px] text-error uppercase tracking-widest flicker-animation">TIMEOUT_IN</span>
-<span class="text-sm font-bold tabular-nums text-error animate-pulse" id="countdown">02:00</span>
-</div>
 <button onclick="hardResetGame()" class="border border-red-500/50 hover:border-red-500 bg-red-500/10 hover:bg-red-500/30 text-red-500 px-3 py-1 text-xs font-bold uppercase tracking-widest transition-all active:translate-y-0.5 flex items-center gap-1.5 cursor-pointer z-50">
 <span class="material-symbols-outlined text-sm">restart_alt</span>
 HARD_RESET
@@ -324,33 +320,6 @@ HARD_RESET
     })();
 
     // State management
-    let time = 120; // Start with 2 minutes
-    const display = document.getElementById('countdown');
-    
-    async function handleTimeout() {
-        try {
-            console.warn("Operator timeout reached. Triggering terminal security shutdown...");
-            const res = await fetch('/api/game/timeout', { method: 'POST' });
-            if (res.ok) {
-                await fetchGameState(); // Instantly sync state to show game over
-            }
-        } catch (err) {
-            console.error("Error sending timeout signal:", err);
-        }
-    }
-    
-    // Countdown Timer - starts immediately on load and runs unconditionally
-    setInterval(() => {
-        if (time <= 0) return;
-        time--;
-        const mins = Math.floor(time / 60);
-        const secs = time % 60;
-        display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        
-        if (time === 0) {
-            handleTimeout();
-        }
-    }, 1000);
 
     // Suspect Profile Metadata
     const suspects = [

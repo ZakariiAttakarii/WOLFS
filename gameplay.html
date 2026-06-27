@@ -808,9 +808,7 @@
         const playerInState = currentGameState.players.find(p => p.name === suspect.name);
         if (!playerInState) return;
         
-        let reasoning = prompt(`ENTER DE-COUPLING REASONING FOR ${suspect.name}:`, "Suspicious behavioral latency mismatch.");
-        if (reasoning === null) return;
-        if (!reasoning.trim()) reasoning = "Suspicious behavioral latency mismatch.";
+        const reasoning = "Suspicious behavioral latency mismatch.";
         
         try {
             const res = await fetch('/api/game/submit-vote', {

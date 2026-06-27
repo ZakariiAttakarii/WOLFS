@@ -458,7 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="max-w-[85%] rounded-2xl p-4 bg-purple-500/10 border border-purple-500/20 shadow-lg relative">
               <div class="flex items-center justify-between gap-6 text-[9px] font-bold text-purple-300/80 mb-1.5 uppercase tracking-wider pb-1 border-b border-white/5">
                 <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px] text-purple-400">person</span> ${msg.senderName} (YOU // WEREWOLF)</span>
-                <span>${msg.timestamp}</span>
               </div>
               <div class="text-slate-100 text-sm leading-relaxed font-sans whitespace-pre-wrap">${msg.text}</div>
             </div>
@@ -469,7 +468,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="max-w-[85%] rounded-2xl p-4 bg-white/[0.02] border border-white/5 shadow-md relative">
               <div class="flex items-center justify-between gap-6 text-[9px] font-bold text-white/45 mb-1.5 uppercase tracking-wider pb-1 border-b border-white/5">
                 <span class="flex items-center gap-1 text-purple-400/80"><span class="material-symbols-outlined text-[12px] text-purple-400">robot_2</span> ${msg.senderName} (VILLAGER)</span>
-                <span>${msg.timestamp}</span>
               </div>
               <div class="text-purple-200/90 text-sm leading-relaxed">${formatMarkdown(msg.text)}</div>
             </div>
@@ -766,7 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       if (revealEliminatedPersona) {
-        revealEliminatedPersona.textContent = eliminated.personaType !== 'None' ? eliminated.personaType : 'Human Werewolf';
+        revealEliminatedPersona.textContent = eliminated.type === 'HUMAN' ? 'Human Werewolf' : 'AI Villager';
       }
     }
 
@@ -866,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (p.id === 'P5') {
           roleLabel = '<span class="text-white font-bold">HUMAN WEREWOLF</span>';
         } else {
-          roleLabel = `<span class="text-purple-300 font-medium">AI VILLAGER (${p.personaType})</span>`;
+          roleLabel = `<span class="text-purple-300 font-medium">AI VILLAGER</span>`;
         }
 
         const statusLabel = p.isEliminated 

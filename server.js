@@ -256,7 +256,9 @@ async function handleApi(req, res) {
 
       res.end(JSON.stringify({ success: true }));
       return;
-        // 4. STEP LLM TURN (Saves client from holding open connections for all LLMs)
+    }
+
+    // 4. STEP LLM TURN (Saves client from holding open connections for all LLMs)
     if (req.method === 'POST' && url.pathname === '/api/game/step-llm') {
       const currentPlayer = gameState.players[gameState.activePlayerIndex];
       

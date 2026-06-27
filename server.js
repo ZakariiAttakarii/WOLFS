@@ -369,10 +369,21 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
         return;
       }
 
+      const targetPlayer = gameState.players.find(p => p.id === targetId);
+      const targetName = targetPlayer ? targetPlayer.name : "UNKNOWN";
+
       gameState.votes[humanPlayer.id] = {
         targetId: targetId,
         reasoning: reasoning
       };
+
+      gameState.messages.push({
+        id: `M_${Date.now()}`,
+        playerId: humanPlayer.id,
+        senderName: humanPlayer.name,
+        text: `▲ [VOTE CAST] DIRECT AUDIT INITIATED BY OPERATOR ON NODE: ${targetName}. REASON: "${reasoning}"`,
+        round: gameState.round
+      });
 
       res.end(JSON.stringify({ success: true }));
       return;

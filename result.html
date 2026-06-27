@@ -101,6 +101,15 @@
             </h1>
         </div>
 
+        <!-- Decoupling Reasoning Container for LLM votes (shown on loss) -->
+        <div id="reasoning-box" class="hidden w-full max-w-xl bg-red-950/10 border border-error/20 p-5 mb-8 z-10 max-h-48 overflow-y-auto">
+            <div class="text-[10px] text-error/50 uppercase tracking-widest mb-3 font-bold border-b border-error/10 pb-1.5 flex justify-between">
+                <span>SYSTEM_AUDIT_LOG // DECOUPLING_REASONING</span>
+                <span class="animate-pulse">DECRYPTION_SUCCESS</span>
+            </div>
+            <div id="reasoning-text" class="text-[11px] md:text-xs text-error/85 font-mono leading-relaxed space-y-3 whitespace-pre-line uppercase"></div>
+        </div>
+
         <!-- Navigation Action Buttons -->
         <div class="flex justify-center w-full max-w-sm z-10">
             <button onclick="window.location.href='/gameplay.html'" id="btn-replay" class="w-full border border-neon-green bg-neon-green text-black hover:bg-transparent hover:text-neon-green font-bold uppercase transition-all py-4 text-xs tracking-widest text-center cursor-pointer">
@@ -231,6 +240,17 @@
             // Replay Button
             const btnReplay = document.getElementById('btn-replay');
             btnReplay.className = state.btnReplayClass;
+
+            // Dynamic Reasoning Box population
+            const reasoningBox = document.getElementById('reasoning-box');
+            const reasoningText = document.getElementById('reasoning-text');
+            if (stateKey === 'loss') {
+                const reasoning = sessionStorage.getItem('decoupling_reasoning') || "DECOUPLING AUDIT PROTOCOLS SUCCESSFUL.\nSYSTEM IDENTIFIED USER SYNTAX ANOMALIES.";
+                if (reasoningText) reasoningText.textContent = reasoning;
+                if (reasoningBox) reasoningBox.classList.remove('hidden');
+            } else {
+                if (reasoningBox) reasoningBox.classList.add('hidden');
+            }
         }
 
         // Initialize state check based on URL parameters (?status=win or ?status=loss)

@@ -379,9 +379,27 @@ document.addEventListener('DOMContentLoaded', () => {
         renderRevealScreen(state);
         return;
       }
-      if (state.status === 'GAME_OVER' && currentActiveScreen !== 'gameOver') {
-        transitionToScreen('gameOver');
-        renderGameOverScreen(state);
+      if (state.status === 'GAME_OVER') {
+        const isWin = state.winner === 'HUMAN';
+        if (isWin) {
+          window.location.href = '/result.html?status=win';
+        } else {
+          // Collect reasons why AI players voted out the human (P5)
+          const humanId = 'P5';
+          const reasons = [];
+          if (state.votes) {
+            Object.entries(state.votes).forEach(([voterId, voteObj]) => {
+              if (voteObj.targetId === humanId && voteObj.reasoning) {
+                const voter = state.players.find(p => p.id === voterId);
+                const voterName = voter ? voter.name : voterId;
+                reasons.push(`${voterName}: ${voteObj.reasoning}`);
+              }
+            });
+          }
+          const reasoningText = reasons.join('\n\n');
+          sessionStorage.setItem('decoupling_reasoning', reasoningText);
+          window.location.href = '/result.html?status=loss';
+        }
         return;
       }
 

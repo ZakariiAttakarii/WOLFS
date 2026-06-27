@@ -122,10 +122,22 @@ function getActivePlayersList(excludeId) {
 function castFallbackVote(llm) {
   const remainingTargets = gameState.players.filter(p => !p.isEliminated && p.id !== llm.id);
   const fallbackTarget = remainingTargets[Math.floor(Math.random() * remainingTargets.length)];
+  const targetId = fallbackTarget ? fallbackTarget.id : llm.id;
+  const targetName = fallbackTarget ? fallbackTarget.name : "UNKNOWN";
+  const reasoning = "[SYSTEM BACKUP] API call timed out or failed to parse. Casting automated diagnostic flag.";
+
   gameState.votes[llm.id] = {
-    targetId: fallbackTarget ? fallbackTarget.id : llm.id,
-    reasoning: "[SYSTEM BACKUP] API call timed out or failed to parse. Casting automated diagnostic flag."
+    targetId: targetId,
+    reasoning: reasoning
   };
+
+  gameState.messages.push({
+    id: `M_${Date.now()}`,
+    playerId: llm.id,
+    senderName: llm.name,
+    text: `▲ [VOTE CAST] AUDIT FLAG PLACED ON NODE: ${targetName}. REASON: "${reasoning}"`,
+    round: gameState.round
+  });
 }
 
 // Process the Turn Queue
@@ -530,6 +542,7 @@ Cast votes for all active AI players by outputting the required JSON object.`;
       // Reset votes for the next round
       gameState.votes = {};
       gameState.eliminatedId = null;
+      gameState.messages = []; // Clear discussion to prevent context pollution
 
       // Assign a NEW random topic to keep the conversation fresh!
       gameState.topic = RANDOM_TOPICS[Math.floor(Math.random() * RANDOM_TOPICS.length)];
@@ -544,6 +557,13 @@ Cast votes for all active AI players by outputting the required JSON object.`;
       }
 
       res.end(JSON.stringify({ success: true }));
+      return;
+    }
+    // 9. TIMEOUT / FORCE GAME OVER
+    if (req.method === 'POST' && url.pathname === '/api/game/timeout') {
+      gameState.status = "GAME_OVER";
+      gameState.winner = "TIMEOUT";
+      res.end(JSON.stringify({ success: true, status: gameState.status, winner: gameState.winner }));
       return;
     }
 

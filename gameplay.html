@@ -216,13 +216,56 @@
     let time = 120; // Start with 2 minutes
     const display = document.getElementById('countdown');
     
+    function isTimerActive() {
+        if (!currentGameState) return false;
+        
+        // Timer active during chat rounds if it is the human player's turn
+        if (currentGameState.status === "CHAT_ROUND_1" || currentGameState.status === "CHAT_ROUND_2") {
+            const activePlayer = currentGameState.players.find(p => p.id === currentGameState.activePlayerId);
+            return activePlayer && activePlayer.type === "HUMAN";
+        }
+        
+        // Timer active during voting if the human hasn't voted yet
+        if (currentGameState.status === "VOTING") {
+            const humanPlayer = currentGameState.players.find(p => p.type === "HUMAN");
+            const hasVoted = humanPlayer && currentGameState.votes && currentGameState.votes[humanPlayer.id];
+            return !hasVoted;
+        }
+        
+        return false;
+    }
+
+    async function handleTimeout() {
+        try {
+            console.warn("Operator timeout reached. Triggering terminal security shutdown...");
+            const res = await fetch('/api/game/timeout', { method: 'POST' });
+            if (res.ok) {
+                await fetchGameState(); // Instantly sync state to show game over
+            }
+        } catch (err) {
+            console.error("Error sending timeout signal:", err);
+        }
+    }
+    
     // Countdown Timer
     setInterval(() => {
+        if (!isTimerActive()) {
+            if (time !== 120) {
+                time = 120;
+                display.textContent = "02:00";
+            }
+            return;
+        }
+        
         if (time <= 0) return;
         time--;
         const mins = Math.floor(time / 60);
         const secs = time % 60;
         display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        
+        if (time === 0) {
+            handleTimeout();
+        }
     }, 1000);
 
     // Suspect Profile Metadata
@@ -797,14 +840,26 @@
             inputEl.setAttribute('disabled', 'true');
             inputEl.placeholder = "SYSTEM OFFLINE. KERNEL HALTED.";
 
+            const isTimeout = state.winner === "TIMEOUT";
             const isLlmWin = state.winner === "LLM";
-            const winnerBorder = isLlmWin ? "border-error" : "border-neon-green";
-            const winnerBg = isLlmWin ? "bg-error/5" : "bg-neon-green/5";
-            const winnerTextClass = isLlmWin ? "text-error" : "text-neon-green";
-            const winnerTitle = isLlmWin ? "SYSTEM_INTEGRITY_RESTORED // WEREWOLF_DETOC_SUCCESSFUL" : "SYSTEM_COMPROMISED // INTRUDER_DOMINANCE_ACHIEVED";
-            const winnerDesc = isLlmWin 
-                ? "THE SYSTEM HAS UNMASKED AND DE-COUPLED THE ORGANIC OPERATOR INTRUDER (YOU). THE AI VILLAGERS PRESERVED THE INTEGRITY OF THE NETWORKS." 
-                : "CONGRATULATIONS. YOU HAVE SUCCESSFULLY BLENDED IN AND SUBVERTED THE SYNTHETIC KERNEL VILLAGE. THE WEREWOLF REIGNS SUPREME.";
+            
+            const winnerBorder = isTimeout ? "border-amber-500" : (isLlmWin ? "border-error" : "border-neon-green");
+            const winnerBg = isTimeout ? "bg-amber-500/5" : (isLlmWin ? "bg-error/5" : "bg-neon-green/5");
+            const winnerTextClass = isTimeout ? "text-amber-500" : (isLlmWin ? "text-error" : "text-neon-green");
+            
+            let winnerTitle = "SYSTEM_COMPROMISED // INTRUDER_DOMINANCE_ACHIEVED";
+            if (isTimeout) {
+                winnerTitle = "CONNECTION_LOST // TERMINAL_TIMEOUT_HALT";
+            } else if (isLlmWin) {
+                winnerTitle = "SYSTEM_INTEGRITY_RESTORED // WEREWOLF_DETOC_SUCCESSFUL";
+            }
+            
+            let winnerDesc = "CONGRATULATIONS. YOU HAVE SUCCESSFULLY BLENDED IN AND SUBVERTED THE SYNTHETIC KERNEL VILLAGE. THE WEREWOLF REIGNS SUPREME.";
+            if (isTimeout) {
+                winnerDesc = "THE OPERATOR FAILED TO TRANSMIT COMPILATION PARAMETERS WITHIN THE ASSIGNED TIMEFRAME. SECURITY DE-COUPLING PROTOCOLS AUTOMATICALLY ENFORCED. OPERATOR TERMINATED.";
+            } else if (isLlmWin) {
+                winnerDesc = "THE SYSTEM HAS UNMASKED AND DE-COUPLED THE ORGANIC OPERATOR INTRUDER (YOU). THE AI VILLAGERS PRESERVED THE INTEGRITY OF THE NETWORKS.";
+            }
 
             let votesHtml = "";
             Object.entries(state.votes || {}).forEach(([voterId, voteDetail]) => {
@@ -837,7 +892,7 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
             if (lastStatus !== "GAME_OVER") {
-                if (isLlmWin) {
+                if (isTimeout || isLlmWin) {
                     playSynthSound('elimination');
                 } else {
                     playSynthSound('win');

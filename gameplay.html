@@ -713,13 +713,22 @@
         const existingTyping = document.getElementById('typing-indicator');
         let preserveTyping = false;
         
+        let activeLlmId = null;
         if (state.status === "CHAT_ROUND_1" || state.status === "CHAT_ROUND_2") {
             const activePlayer = state.players.find(p => p.id === state.activePlayerId);
             if (activePlayer && activePlayer.type !== "HUMAN") {
-                if (existingTyping && existingTyping.getAttribute('data-player-id') === activePlayer.id) {
-                    preserveTyping = true;
-                }
+                activeLlmId = activePlayer.id;
             }
+        } else if (state.status === "VOTING" && hasVoted) {
+            const activeLLMs = state.players.filter(p => p.type === "LLM" && !p.isEliminated);
+            const nextVotingLlm = activeLLMs.find(llm => !state.votes[llm.id]);
+            if (nextVotingLlm) {
+                activeLlmId = nextVotingLlm.id;
+            }
+        }
+        
+        if (activeLlmId && existingTyping && existingTyping.getAttribute('data-player-id') === activeLlmId) {
+            preserveTyping = true;
         }
         
         if (existingTyping && !preserveTyping) {
@@ -833,6 +842,77 @@
                 const nextVotingLlm = activeLLMs.find(llm => !state.votes[llm.id]);
                 if (nextVotingLlm) {
                     inputEl.placeholder = `SUBJECT ${nextVotingLlm.name} IS EXECUTING VOTE COMPILATION...`;
+                    
+                    const activeSuspectIndex = suspects.findIndex(s => s.name === nextVotingLlm.name);
+                    if (activeSuspectIndex !== -1) {
+                        setActiveSpeaker(activeSuspectIndex);
+                    }
+                    
+                    const suspect = suspects[activeSuspectIndex];
+                    if (suspect && !preserveTyping) {
+                        const typingDiv = document.createElement('div');
+                        typingDiv.id = 'typing-indicator';
+                        typingDiv.setAttribute('data-player-id', nextVotingLlm.id);
+                        typingDiv.className = 'space-y-2 max-w-3xl mb-6';
+                        typingDiv.innerHTML = `
+                            <div class="flex items-center gap-2 ${suspect.colorClass} text-[11px] font-bold tracking-widest uppercase animate-pulse">
+                                <span class="material-symbols-outlined text-[14px] animate-spin">${suspect.icon}</span> ${suspect.name}
+                            </div>
+                            <div class="pl-4 border-l-2 ${suspect.borderColorClass} flex flex-col md:flex-row md:items-center gap-6 py-2">
+                                <!-- Visual Waveform Lines -->
+                                <div class="flex items-end gap-1 h-6 shrink-0">
+                                    <div class="w-[3px] bg-current ${suspect.colorClass} wave-bar" style="height: 100%; animation-delay: 0.1s;"></div>
+                                    <div class="w-[3px] bg-current ${suspect.colorClass} wave-bar" style="height: 60%; animation-delay: 0.3s;"></div>
+                                    <div class="w-[3px] bg-current ${suspect.colorClass} wave-bar" style="height: 80%; animation-delay: 0.5s;"></div>
+                                    <div class="w-[3px] bg-current ${suspect.colorClass} wave-bar" style="height: 40%; animation-delay: 0.2s;"></div>
+                                    <div class="w-[3px] bg-current ${suspect.colorClass} wave-bar" style="height: 70%; animation-delay: 0.4s;"></div>
+                                    <div class="w-[3px] bg-current ${suspect.colorClass} wave-bar" style="height: 90%; animation-delay: 0.6s;"></div>
+                                </div>
+                                
+                                <!-- Retro Logs block -->
+                                <div class="${suspect.colorClass} space-y-1 text-[11px] font-mono opacity-80 leading-relaxed uppercase">
+                                    <div class="flex items-center gap-2">
+                                        <span class="animate-pulse">▶</span> <span id="typing-subroutine-log">COMPILING SUSPECT WRITE VECTORS...</span>
+                                    </div>
+                                    <div class="text-[10px] text-white/50 tracking-wider">
+                                        THINK_UPTIME: <span id="uptime-count">0.5</span>s [■■■■■■■░░░] 70%
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        chatContainer.appendChild(typingDiv);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                        // Subroutine typing rotation effect
+                        let subIndex = 0;
+                        const subroutines = [
+                            "COMPILING SUSPECT WRITE VECTORS...",
+                            "EVALUATING DEVIATION FROM SYSTEM CODES...",
+                            "CALCULATING DE-COUPLING MATRIX VALUE...",
+                            "RESOLVING PROTOCOL VOTING TARGET..."
+                        ];
+                        
+                        const consoleInterval = setInterval(() => {
+                            const currentIndicator = document.getElementById('typing-indicator');
+                            
+                            if (!currentIndicator || currentIndicator.getAttribute('data-player-id') !== nextVotingLlm.id) {
+                                clearInterval(consoleInterval);
+                                return;
+                            }
+                            
+                            const logEl = currentIndicator.querySelector('#typing-subroutine-log');
+                            const uptimeEl = currentIndicator.querySelector('#uptime-count');
+                            
+                            if (logEl) {
+                                subIndex = (subIndex + 1) % subroutines.length;
+                                logEl.textContent = subroutines[subIndex];
+                            }
+                            if (uptimeEl) {
+                                let currentUptime = parseFloat(uptimeEl.textContent);
+                                uptimeEl.textContent = (currentUptime + 0.4).toFixed(1);
+                            }
+                        }, 1000);
+                    }
                 } else {
                     inputEl.placeholder = "ALL VOTES CAST. AGGREGATING RESULTS...";
                 }

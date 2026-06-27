@@ -41,6 +41,20 @@ const RANDOM_TOPICS = [
 // Map of gameSessionId -> gameState
 const games = new Map();
 
+// Hard time limit on a discussion phase. When it elapses the game force-jumps
+// to VOTING regardless of how many discussion rounds are left.
+const CHAT_DURATION_MS = 3 * 60 * 1000; // 3 minutes
+
+// Force the transition to VOTING if the discussion timer has run out.
+// Safe to call on any state — it only acts during CHAT once the clock expires.
+function forceVoteIfTimedOut(gameState) {
+  if (gameState.status !== "CHAT" || !gameState.chatStartTime) return;
+  if (Date.now() - gameState.chatStartTime < CHAT_DURATION_MS) return;
+  gameState.status = "VOTING";
+  gameState.activePlayerIndex = -1;
+  gameState.nextBid = null;
+}
+
 // Helper to get or create isolated game state per session
 function getOrCreateGameState(sessionId) {
   if (!sessionId) {
@@ -54,6 +68,7 @@ function getOrCreateGameState(sessionId) {
       maxRounds: 3, // Number of discussion rounds before voting (configurable, >= 2)
       activePlayerIndex: 0, // Index of whose turn it is to speak
       spokenThisRound: [], // Player ids who have already taken their turn this round
+      interjectedThisRound: [], // Player ids who have used their right-of-reply this round
       nextBid: null, // Winning bid of the upcoming speaker (for display)
       players: [], // Array of { id, name, type, isEliminated }
       messages: [], // Array of { id, playerId, senderName, text, round, action, targetName, bid }
@@ -61,6 +76,7 @@ function getOrCreateGameState(sessionId) {
       suspicion: {}, // Map of { voterId: { targetId: score } } — persists across rounds
       eliminatedId: null,
       winner: null, // "HUMAN" or "LLM"
+      chatStartTime: null, // Timestamp (ms) the current CHAT phase began; drives the vote timer
       configApiKey: "" // Optional client-supplied Gemini key if env is missing
     });
   }
@@ -360,9 +376,10 @@ async function selectSpeakerByBid(gameState, candidates) {
   return { id: best.id, bid: bestBid };
 }
 
-// Advances the turn: marks who just spoke, then bids to choose the next speaker.
-// Each active player still speaks exactly once per round; bidding only decides
-// the ORDER within the round (and which round-2+ speaker jumps in first).
+// Advances the turn: marks who just spoke, grants a right-of-reply interjection
+// if someone was just directly addressed, otherwise bids for the next speaker.
+// Each player still gets at least one turn per round; the only way to speak more
+// than once is to be accused/questioned and exercise the right of reply.
 async function advanceTurn(gameState) {
   const activePlayers = gameState.players.filter(p => !p.isEliminated);
   if (activePlayers.length === 0) return;
@@ -372,6 +389,24 @@ async function advanceTurn(gameState) {
     gameState.spokenThisRound.push(justSpoke.id);
   }
 
+  // Right-of-reply: if the message just posted accuses/questions a player who has
+  // ALREADY spoken this round, let them interject immediately (once per round)
+  // before the normal queue resumes. A player who hasn't spoken yet already gets
+  // the floor via their bid, so no interjection is needed for them. Capping it at
+  // one reply each per round bounds any back-and-forth so it can't loop forever.
+  const lastMsg = gameState.messages[gameState.messages.length - 1];
+  if (lastMsg && (lastMsg.action === "accuse" || lastMsg.action === "question") && lastMsg.targetName) {
+    const target = activePlayers.find(p => p.name === lastMsg.targetName);
+    if (target && target.id !== justSpoke?.id
+        && gameState.spokenThisRound.includes(target.id)
+        && !gameState.interjectedThisRound.includes(target.id)) {
+      gameState.interjectedThisRound.push(target.id);
+      gameState.activePlayerIndex = gameState.players.findIndex(p => p.id === target.id);
+      gameState.nextBid = 4; // forced right-of-reply
+      return;
+    }
+  }
+
   let candidates = activePlayers.filter(p => !gameState.spokenThisRound.includes(p.id));
 
   if (candidates.length === 0) {
@@ -379,6 +414,7 @@ async function advanceTurn(gameState) {
     if (gameState.round < gameState.maxRounds) {
       gameState.round += 1;
       gameState.spokenThisRound = [];
+      gameState.interjectedThisRound = [];
       candidates = activePlayers; // all bid afresh for the new round's opener
     } else {
       gameState.status = "VOTING";
@@ -404,6 +440,12 @@ async function handleApi(req, res) {
   try {
     // 1. GET GAME STATE
     if (req.method === 'GET' && url.pathname === '/api/game/state') {
+      forceVoteIfTimedOut(gameState);
+
+      const timeRemaining = (gameState.status === "CHAT" && gameState.chatStartTime)
+        ? Math.max(0, CHAT_DURATION_MS - (Date.now() - gameState.chatStartTime))
+        : null;
+
       const sanitizedPlayers = gameState.players.map(p => ({
         id: p.id,
         name: p.name,
@@ -432,7 +474,8 @@ async function handleApi(req, res) {
         eliminatedId: gameState.eliminatedId,
         winner: gameState.winner,
         hasApiKey: true,
-        votes: clientVotes
+        votes: clientVotes,
+        timeRemaining: timeRemaining
       }));
       return;
     }
@@ -475,9 +518,11 @@ async function handleApi(req, res) {
       gameState.players = gameState.players.sort(() => Math.random() - 0.5);
 
       gameState.status = "CHAT";
+      gameState.chatStartTime = Date.now();
       gameState.round = 1;
       gameState.activePlayerIndex = 0; // Starts with first player in shuffled order
       gameState.spokenThisRound = [];
+      gameState.interjectedThisRound = [];
       gameState.nextBid = null;
       gameState.messages = [];
       gameState.votes = {};
@@ -520,6 +565,13 @@ async function handleApi(req, res) {
 
     // 4. STEP LLM TURN (Saves client from holding open connections for all LLMs)
     if (req.method === 'POST' && url.pathname === '/api/game/step-llm') {
+      // Timer may have expired between polls — bail straight to voting.
+      forceVoteIfTimedOut(gameState);
+      if (gameState.status === "VOTING") {
+        res.end(JSON.stringify({ success: true, timedOut: true, status: "VOTING" }));
+        return;
+      }
+
       const currentPlayer = gameState.players[gameState.activePlayerIndex];
       
       if (!currentPlayer) {
@@ -612,7 +664,7 @@ ${formatHistoryForLLM(gameState)}
 Other players you may reference: ${others}
 Your current private suspicion scores (0.00 = trusted AI, 1.00 = certain human): ${formatSuspicionNotes(gameState, currentPlayer.id)}${defenseHint}
 
-Pick ONE action and write your public "speech" (strictly under 140 characters, in-character). For accuse/defend/question/agree, set "targetName" to the exact player name involved (omit it for observe). Then output your updated "suspicions" for the other players as an array of {targetName, score}.`;
+Pick ONE action and write your public "speech" (strictly under 140 characters, in-character). When you reference a player, address them with @Name inside your speech (e.g. "@KAIZUKI your answer was vague."). For accuse/defend/question/agree, set "targetName" to the exact player name involved (omit it for observe). Then output your updated "suspicions" for the other players as an array of {targetName, score}.`;
 
         let parsed;
         try {
@@ -885,8 +937,10 @@ Cast "${llm.name}"'s vote by outputting the required JSON object.`;
 
       gameState.round = 1;
       gameState.status = "CHAT";
+      gameState.chatStartTime = Date.now();
       gameState.activePlayerIndex = 0; // Starts from first player in standard array
       gameState.spokenThisRound = [];
+      gameState.interjectedThisRound = [];
       gameState.nextBid = null;
 
       // Find first non-eliminated player to start
@@ -907,6 +961,7 @@ Cast "${llm.name}"'s vote by outputting the required JSON object.`;
         maxRounds: gameState.maxRounds || 3,
         activePlayerIndex: 0,
         spokenThisRound: [],
+        interjectedThisRound: [],
         nextBid: null,
         players: [],
         messages: [],

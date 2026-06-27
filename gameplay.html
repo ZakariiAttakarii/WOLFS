@@ -103,6 +103,10 @@
 <span class="text-xs font-bold tracking-[0.2em] uppercase terminal-glow-green flicker-animation text-neon-green">PROJECT_TURIN // KERNEL STATUS: INITIALIZING // ROUND 1: RESPONSE<br></span>
 </div>
 <div class="flex items-center gap-6">
+<span id="vote-timer" class="hidden items-center gap-1.5 text-xs font-bold tracking-[0.2em] uppercase text-neon-green terminal-glow-green">
+<span class="material-symbols-outlined text-sm">timer</span>
+<span id="vote-timer-value">3:00</span>
+</span>
 <button onclick="hardResetGame()" class="border border-red-500/50 hover:border-red-500 bg-red-500/10 hover:bg-red-500/30 text-red-500 px-3 py-1 text-xs font-bold uppercase tracking-widest transition-all active:translate-y-0.5 flex items-center gap-1.5 cursor-pointer z-50">
 <span class="material-symbols-outlined text-sm">restart_alt</span>
 HARD_RESET
@@ -197,11 +201,15 @@ HARD_RESET
 </div>
 <!-- Terminal Input -->
 <div class="mt-8 pt-6 border-t border-white/5">
+<div class="relative">
+<!-- @mention autocomplete menu -->
+<div id="mention-menu" class="hidden absolute bottom-full mb-2 left-0 w-60 bg-black/95 border border-white/10 rounded-md overflow-hidden z-30 shadow-[0_0_20px_rgba(0,0,0,0.8)] backdrop-blur-sm"></div>
 <form id="chat-form" onsubmit="event.preventDefault(); submitQuery();" class="flex items-center gap-4 bg-surface-container-low px-4 py-3 border border-white/5 group transition-colors duration-300">
 <span id="chat-arrow" class="text-neon-green font-bold terminal-glow-green text-lg animate-pulse">&gt;</span>
-<input id="chat-input" maxlength="200" class="flex-1 bg-transparent border-none text-neon-green text-[14px] focus:ring-0 placeholder:text-neon-green/20 tracking-wider p-0 font-bold transition-colors duration-300" placeholder="INITIALIZE_QUERY_SEQUENCE..." type="text" autocomplete="off">
+<input id="chat-input" maxlength="200" class="flex-1 bg-transparent border-none text-neon-green text-[14px] focus:ring-0 placeholder:text-neon-green/20 tracking-wider p-0 font-bold transition-colors duration-300" placeholder="INITIALIZE_QUERY_SEQUENCE... (type @ to mention)" type="text" autocomplete="off">
 <div id="chat-cursor" class="w-1.5 h-5 bg-neon-green shadow-[0_0_8px_rgba(0,255,65,1)] transition-all duration-300"></div>
 </form>
+</div>
 </div>
 </div>
 </section>
@@ -409,16 +417,105 @@ HARD_RESET
         }
     ];
 
-    // When a suspect refers to another suspect by name, color that name with
-    // the referenced suspect's color. The rest of the line stays the speaker's color.
+    // Escapes HTML, then renders "@Name" as a colored mention pill and a bare
+    // "Name" in the referenced character's color (a speaker's own bare name is
+    // left in its own color). Single pass so pills aren't re-matched.
     function highlightNames(text, speaker) {
-        let result = text;
-        suspects.forEach(s => {
-            if (speaker && s.name === speaker.name) return; // keep own name in own color
-            const re = new RegExp('\\b(' + s.name + ')\\b', 'gi');
-            result = result.replace(re, `<span class="${s.colorClass}">$1</span>`);
+        let html = String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const names = suspects.map(s => s.name).join('|');
+        if (!names) return html;
+        const re = new RegExp('(@?)\\b(' + names + ')\\b', 'gi');
+        return html.replace(re, (full, at, name) => {
+            const s = suspects.find(x => x.name.toLowerCase() === name.toLowerCase());
+            if (!s) return full;
+            if (at === '@') {
+                return `<span class="px-1 rounded-sm font-bold border bg-white/5 ${s.colorClass} ${s.borderColorClass}">@${s.name}</span>`;
+            }
+            if (speaker && s.name === speaker.name) return s.name; // own name, own color
+            return `<span class="${s.colorClass}">${s.name}</span>`;
         });
-        return result;
+    }
+
+    // ---- @mention autocomplete for the human chat input ----
+    let mentionItems = [];      // [{ name, color }]
+    let mentionIndex = 0;
+    let mentionFragStart = -1;  // index of the '@' currently being completed
+
+    function livingMentionNames() {
+        // Other AI villagers still in the game — the people the human can address.
+        if (!currentGameState) return suspects.map(s => s.name);
+        return currentGameState.players
+            .filter(p => p.type === 'LLM' && !p.isEliminated)
+            .map(p => p.name);
+    }
+
+    function closeMentionMenu() {
+        const menu = document.getElementById('mention-menu');
+        if (menu) menu.classList.add('hidden');
+        mentionItems = [];
+        mentionFragStart = -1;
+    }
+
+    function currentMentionFrag() {
+        const input = document.getElementById('chat-input');
+        if (!input) return null;
+        const upto = input.value.slice(0, input.selectionStart);
+        const m = upto.match(/@(\w*)$/);
+        return m ? { frag: m[1], start: input.selectionStart - m[0].length } : null;
+    }
+
+    function renderMentionMenu(frag) {
+        const menu = document.getElementById('mention-menu');
+        if (!menu) return;
+        const f = frag.toLowerCase();
+        mentionItems = livingMentionNames()
+            .filter(n => n.toLowerCase().startsWith(f))
+            .map(n => ({ name: n, color: (suspects.find(s => s.name === n) || {}).colorClass || 'text-white' }));
+        if (mentionItems.length === 0) { closeMentionMenu(); return; }
+        if (mentionIndex >= mentionItems.length) mentionIndex = 0;
+        menu.innerHTML = mentionItems.map((it, i) => `
+            <div data-mi="${i}" class="px-3 py-2 text-[12px] font-bold tracking-wider cursor-pointer flex items-center gap-1 ${i === mentionIndex ? 'bg-white/10' : ''} ${it.color}">
+                <span class="opacity-50">@</span>${it.name}
+            </div>`).join('');
+        menu.querySelectorAll('[data-mi]').forEach(el => {
+            el.addEventListener('mousedown', (e) => { e.preventDefault(); acceptMention(parseInt(el.getAttribute('data-mi'), 10)); });
+        });
+        menu.classList.remove('hidden');
+    }
+
+    function acceptMention(i) {
+        const input = document.getElementById('chat-input');
+        if (!input || !mentionItems[i] || mentionFragStart < 0) return;
+        const before = input.value.slice(0, mentionFragStart);
+        const after = input.value.slice(input.selectionStart);
+        const insert = `@${mentionItems[i].name} `;
+        input.value = before + insert + after;
+        const pos = (before + insert).length;
+        input.setSelectionRange(pos, pos);
+        closeMentionMenu();
+        input.focus();
+    }
+
+    function handleMentionInput() {
+        const ctx = currentMentionFrag();
+        if (ctx) {
+            mentionFragStart = ctx.start;
+            mentionIndex = 0;
+            renderMentionMenu(ctx.frag);
+        } else {
+            closeMentionMenu();
+        }
+    }
+
+    function handleMentionKeydown(e) {
+        const menu = document.getElementById('mention-menu');
+        if (!menu || menu.classList.contains('hidden') || mentionItems.length === 0) return;
+        const ctx = currentMentionFrag();
+        const frag = ctx ? ctx.frag : '';
+        if (e.key === 'ArrowDown') { e.preventDefault(); mentionIndex = (mentionIndex + 1) % mentionItems.length; renderMentionMenu(frag); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); mentionIndex = (mentionIndex - 1 + mentionItems.length) % mentionItems.length; renderMentionMenu(frag); }
+        else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); acceptMention(mentionIndex); }
+        else if (e.key === 'Escape') { e.preventDefault(); closeMentionMenu(); }
     }
 
     // Renders a small colored tag for an AI player's discussion move
@@ -761,7 +858,7 @@ HARD_RESET
                                 <span class="material-symbols-outlined text-[14px]">smart_toy</span> ${msg.senderName} ${actionBadge(msg)}
                             </div>
                             <div class="pl-4 border-l-2 border-primary text-primary leading-relaxed text-[13px]">
-                                ${msg.text}
+                                ${highlightNames(msg.text, null)}
                             </div>
                         `;
                     }
@@ -769,7 +866,7 @@ HARD_RESET
                     msgDiv.innerHTML = `
                         <div class="text-white/40 text-[11px] font-bold tracking-widest uppercase">OPERATOR [${msg.senderName}]</div>
                         <div class="pl-4 border-l-2 border-white/20 text-white/80 leading-relaxed text-[13px]">
-                            ${msg.text}
+                            ${highlightNames(msg.text, null)}
                         </div>
                     `;
                 }
@@ -1297,6 +1394,12 @@ HARD_RESET
 
     // Initialize state on page load and begin polling
     document.addEventListener('DOMContentLoaded', () => {
+        const ci = document.getElementById('chat-input');
+        if (ci) {
+            ci.addEventListener('input', handleMentionInput);
+            ci.addEventListener('keydown', handleMentionKeydown);
+            ci.addEventListener('blur', () => setTimeout(closeMentionMenu, 120));
+        }
         fetchGameState();
         setInterval(fetchGameState, 1500);
     });

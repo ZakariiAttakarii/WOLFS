@@ -101,7 +101,7 @@
 </header>
 <!-- Main Content Area -->
 <main class="flex-1 mt-12 pb-20 md:pb-0 flex flex-col overflow-hidden relative z-10">
-<section class="flex-1 p-4 md:p-8 flex flex-col gap-6 max-w-6xl mx-auto w-full">
+<section class="flex-1 p-4 md:p-8 flex flex-col gap-6 max-w-6xl mx-auto w-full min-h-0 overflow-hidden">
 <!-- Suspect Modules (Top Row) -->
 <div class="grid grid-cols-4 gap-4">
 <!-- Active Suspect: Subject 01 -->
@@ -162,19 +162,6 @@
 <div class="flex-1 flex flex-col min-h-0 bg-surface-container-lowest border border-white/5 rounded-sm p-6 relative">
 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-green/20 to-transparent"></div>
 <div class="flex-1 overflow-y-auto space-y-6 text-[14px] font-medium custom-scrollbar" id="chat-container">
-<!-- Operator Prompt -->
-<div class="space-y-2 max-w-2xl">
-
-
-</div>
-<!-- Active Subject Response -->
-<div class="space-y-2 max-w-3xl">
-<div class="flex items-center gap-2 text-neon-green text-[11px] font-bold tracking-widest">
-<span class="material-symbols-outlined text-[14px]">change_history</span> KAICHENG<span style="letter-spacing: 0.1em;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</span></div>
-<div class="pl-4 border-l-2 border-neon-green text-neon-green terminal-glow-green leading-relaxed">
- Directive confirmed. Processing data streams for sector 7. My logic remains consistent with user requirements. Are you questioning my efficiency?
-                    </div>
-</div>
 </div>
 <!-- Terminal Input -->
 <div class="mt-8 pt-6 border-t border-white/5">
@@ -496,6 +483,10 @@
         }
 
         // 1. Render Subject Cards Status (Eliminated or Active)
+        const humanPlayer = state.players.find(p => p.type === "HUMAN");
+        const hasVoted = humanPlayer && state.votes && state.votes[humanPlayer.id];
+        const votedTargetId = hasVoted ? state.votes[humanPlayer.id].targetId : null;
+
         suspects.forEach((suspect, index) => {
             const playerInState = state.players.find(p => p.name === suspect.name);
             const cardEl = document.getElementById(suspect.id);
@@ -511,12 +502,25 @@
                 } else {
                     cardEl.style.opacity = "1";
                     cardEl.style.pointerEvents = "auto";
-                    if (labelEl) labelEl.textContent = `SUBJECT_0${index + 1}`;
+                    if (labelEl) labelEl.textContent = suspect.name;
                     
                     if (buttonEl) {
                         if (state.status === "VOTING") {
                             buttonEl.style.display = "inline-block";
-                            buttonEl.className = "border border-error/50 text-error bg-error/5 hover:bg-error hover:text-black hover:border-error transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer animate-pulse";
+                            if (hasVoted) {
+                                buttonEl.disabled = true;
+                                if (playerInState.id === votedTargetId) {
+                                    buttonEl.textContent = "VOTED";
+                                    buttonEl.className = "border border-error bg-error text-black rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider pointer-events-none";
+                                } else {
+                                    buttonEl.textContent = "VOTE";
+                                    buttonEl.className = "border border-white/10 text-white/20 bg-transparent rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider pointer-events-none opacity-30";
+                                }
+                            } else {
+                                buttonEl.disabled = false;
+                                buttonEl.textContent = "VOTE";
+                                buttonEl.className = "border border-error/50 text-error bg-error/5 hover:bg-error hover:text-black hover:border-error transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer animate-pulse";
+                            }
                         } else {
                             buttonEl.style.display = "none";
                         }
@@ -793,6 +797,13 @@
     }
 
     async function voteForSubject(index) {
+        if (!currentGameState) return;
+        const humanPlayer = currentGameState.players.find(p => p.type === "HUMAN");
+        if (humanPlayer && currentGameState.votes && currentGameState.votes[humanPlayer.id]) {
+            alert("Vote already registered. De-coupling protocol locked.");
+            return;
+        }
+
         const suspect = suspects[index];
         const playerInState = currentGameState.players.find(p => p.name === suspect.name);
         if (!playerInState) return;

@@ -850,24 +850,12 @@
                 revealDiv.id = 'reveal-panel';
                 revealDiv.className = 'space-y-2 max-w-2xl mb-6 p-4 border border-error bg-error/5';
                 
-                let votesHtml = "";
-                Object.entries(state.votes || {}).forEach(([voterId, voteDetail]) => {
-                    const voter = state.players.find(p => p.id === voterId);
-                    const target = state.players.find(p => p.id === voteDetail.targetId);
-                    if (voter && target) {
-                        votesHtml += `<div class="text-[11px] mt-1 text-white/60">
-                            &gt; [${voter.name}] VOTED FOR [${target.name}]. <span class="italic text-error/70">"${voteDetail.reasoning}"</span>
-                        </div>`;
-                    }
-                });
-
                 revealDiv.innerHTML = `
                     <div class="text-error text-[11px] font-bold tracking-widest uppercase">AUDIT_DE_COUPLING_COMPLETED</div>
-                    <div class="pl-4 border-l-2 border-error text-error/80 leading-relaxed uppercase text-[12px]">
+                    <div class="pl-4 border-l-2 border-error text-error/80 leading-relaxed uppercase text-[12px] mt-2">
                         ELIMINATION PROTOCOL INITIATED.<br>
-                        SUBJECT ELIMINATED: <span class="font-bold underline text-white">${eliminatedPlayer.name}</span> (${eliminatedPlayer.type})<br><br>
-                        VOTES RECORDED:<br>
-                        ${votesHtml || '<div class="text-[11px] text-white/40">&gt; NO VOTES REGISTERED.</div>'}
+                        SUBJECT ELIMINATED: <span class="font-bold underline text-white">${eliminatedPlayer.name}</span> (${eliminatedPlayer.type === 'HUMAN' ? 'HUMAN OPERATOR' : 'AI VILLAGER'})<br>
+                        STATUS: PERMANENTLY DE-COUPLED FROM CLUSTER
                     </div>
                     <div class="mt-4 pt-2">
                         <button onclick="continueAfterReveal()" class="border border-neon-green/30 text-neon-green/80 bg-neon-green/5 hover:bg-neon-green hover:text-black hover:border-neon-green transition-all rounded-sm px-4 py-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer">

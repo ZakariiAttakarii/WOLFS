@@ -147,7 +147,7 @@ function castFallbackVote(gameState, llm) {
     id: `M_${Date.now()}`,
     playerId: llm.id,
     senderName: llm.name,
-    text: `▲ [VOTE CAST] AUDIT FLAG PLACED ON NODE: ${targetName}. REASON: "${reasoning}"`,
+    text: `▲ [VOTE CAST] ${targetName}. REASON: "${reasoning}"`,
     round: gameState.round
   });
 }
@@ -429,7 +429,7 @@ Choose one of the other players' Round 1 responses. You MUST write an aggressive
         id: `M_${Date.now()}`,
         playerId: humanPlayer.id,
         senderName: humanPlayer.name,
-        text: `▲ [VOTE CAST] DIRECT AUDIT INITIATED BY OPERATOR ON NODE: ${targetName}. REASON: "${reasoning}"`,
+        text: `▲ [VOTE CAST] ${targetName}. REASON: "${reasoning}"`,
         round: gameState.round
       });
 
@@ -519,7 +519,7 @@ Cast "${nextVotingLlm.name}"'s vote by outputting the required JSON object.`;
                   id: `M_${Date.now()}`,
                   playerId: nextVotingLlm.id,
                   senderName: nextVotingLlm.name,
-                  text: `▲ [VOTE CAST] AUDIT FLAG PLACED ON NODE: ${targetName}. REASON: "${reasoning}"`,
+                  text: `▲ [VOTE CAST] ${targetName}. REASON: "${reasoning}"`,
                   round: gameState.round
                 });
 

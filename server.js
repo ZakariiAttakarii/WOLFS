@@ -1,8 +1,26 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { GoogleGenAI } = require('@google/genai');
 
 const PORT = process.env.PORT || 8080;
+
+// Set default environment variables for local testing with Vertex AI if not set
+if (!process.env.GOOGLE_GENAI_USE_VERTEXAI) {
+  process.env.GOOGLE_GENAI_USE_VERTEXAI = 'true';
+}
+if (!process.env.GOOGLE_CLOUD_PROJECT) {
+  process.env.GOOGLE_CLOUD_PROJECT = 'project-937e6430-4a6d-41b7-9ea';
+}
+if (!process.env.GOOGLE_CLOUD_LOCATION) {
+  process.env.GOOGLE_CLOUD_LOCATION = 'us-central1';
+}
+
+const ai = new GoogleGenAI({
+  vertexai: true,
+  project: process.env.GOOGLE_CLOUD_PROJECT || 'project-937e6430-4a6d-41b7-9ea',
+  location: process.env.GOOGLE_CLOUD_LOCATION || 'us-central1'
+});
 
 // Set up random topics for the game
 const RANDOM_TOPICS = [
@@ -62,45 +80,25 @@ function readPostBody(req) {
   });
 }
 
-// Direct API call to Gemini with zero npm dependencies
-async function callGemini(apiKey, prompt, systemInstruction) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-  const payload = {
-    contents: [{ parts: [{ text: prompt }] }],
-    systemInstruction: { parts: [{ text: systemInstruction }] },
-    generationConfig: {
+// Direct API call to Gemini using @google/genai with Vertex AI
+async function callGemini(prompt, systemInstruction) {
+  const isJson = systemInstruction.includes("JSON");
+  
+  const response = await ai.models.generateContent({
+    model: 'gemini-1.5-flash',
+    contents: prompt,
+    config: {
+      systemInstruction: systemInstruction,
       temperature: 0.7,
       maxOutputTokens: 800,
-      responseMimeType: "application/json" // Default to text unless specified, but we'll override if doing voting
+      responseMimeType: isJson ? "application/json" : undefined
     }
-  };
-
-  // If we want raw text, we remove the JSON mime type
-  if (!systemInstruction.includes("JSON")) {
-    delete payload.generationConfig.responseMimeType;
-  }
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini API Response: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
-    return data.candidates[0].content.parts[0].text;
+  if (response.text) {
+    return response.text;
   }
   throw new Error("No generated content returned from Gemini API");
-}
-
-// Get the active Gemini API Key
-function getApiKey(clientKey) {
-  return process.env.GEMINI_API_KEY || clientKey || gameState.configApiKey || "";
 }
 
 // Formats the chat history specifically for the LLM to read
@@ -174,7 +172,7 @@ async function handleApi(req, res) {
         messages: gameState.messages,
         eliminatedId: gameState.eliminatedId,
         winner: gameState.winner,
-        hasApiKey: !!getApiKey(),
+        hasApiKey: true,
         votes: gameState.status === "REVEAL" || gameState.status === "GAME_OVER" ? gameState.votes : {}
       }));
       return;
@@ -189,13 +187,6 @@ async function handleApi(req, res) {
 
       if (userApiKey) {
         gameState.configApiKey = userApiKey;
-      }
-
-      const apiKey = getApiKey();
-      if (!apiKey) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: "Missing API Key. Please provide a GEMINI_API_KEY." }));
-        return;
       }
 
       // Initialize Topic
@@ -274,8 +265,6 @@ async function handleApi(req, res) {
       }
 
       // It's an LLM turn! Call Gemini API
-      const apiKey = getApiKey();
-
       let systemInstruction = "";
       let prompt = "";
 
@@ -304,7 +293,7 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
       }
 
       try {
-        const text = await callGemini(apiKey, prompt, systemInstruction);
+        const text = await callGemini(prompt, systemInstruction);
 
         gameState.messages.push({
           id: `M_${Date.now()}`,
@@ -351,7 +340,6 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
     // 6. PROCESS LLM VOTES (Runs all LLM votes in sequence and reveals the outcome)
     if (req.method === 'POST' && url.pathname === '/api/game/step-llm-votes') {
       const activeLLMs = gameState.players.filter(p => p.type === "LLM" && !p.isEliminated);
-      const apiKey = getApiKey();
 
       // Check if human has voted first
       const humanPlayer = gameState.players.find(p => p.type === "HUMAN");
@@ -393,7 +381,7 @@ ${getActivePlayersList(llm.id)}
 Cast your vote by outputting the required JSON object.`;
 
         try {
-          const geminiResponseText = await callGemini(apiKey, prompt, systemInstruction);
+          const geminiResponseText = await callGemini(prompt, systemInstruction);
           
           // Parse JSON from Gemini output (stripping any markdown code fences if Gemini added them)
           let cleanJsonText = geminiResponseText.trim();

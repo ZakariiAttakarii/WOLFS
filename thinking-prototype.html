@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE WEREWOLF MATRIX // COGNITIVE_PROTOTYPE</title>
+    <!-- Tailwind CSS for high fidelity structure -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- JetBrains Mono & Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neon-green': '#00ff66',
+                        'electric-blue': '#00d1ff',
+                        'hot-pink': '#ff007a',
+                        'amber': '#ffb800',
+                        'surface-container-lowest': '#010502',
+                        'surface-container-low': '#040d06',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: #010402;
+            color: #a3ffcc;
+        }
+
+        /* Strict Retro Corners */
+        * {
+            border-radius: 0 !important;
+        }
+
+        /* CRT Effects */
+        .scanline-effect {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.15) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        /* Glow classes */
+        .terminal-glow-green {
+            text-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
+        }
+        .terminal-glow-blue {
+            text-shadow: 0 0 8px rgba(0, 209, 255, 0.4);
+        }
+        .terminal-glow-pink {
+            text-shadow: 0 0 8px rgba(255, 0, 122, 0.4);
+        }
+        .terminal-glow-amber {
+            text-shadow: 0 0 8px rgba(255, 184, 0, 0.4);
+        }
+
+        /* Pulse wave animation for Quantum style */
+        @keyframes wavePulse {
+            0%, 100% { transform: scaleY(0.3); opacity: 0.4; }
+            50% { transform: scaleY(1); opacity: 1; }
+        }
+        .wave-bar {
+            animation: wavePulse 1.2s ease-in-out infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #010502;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #004d1a;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00ff66;
+        }
+
+        /* Matrix rain animation */
+        @keyframes matrixRain {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        .matrix-rain-line {
+            animation: matrixRain 3s linear infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative overflow-hidden flex flex-col p-6 scanline-effect">
+    <div class="absolute inset-0 bg-[radial-gradient(circle,rgba(0,255,102,0.03)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+
+    <!-- Main Header -->
+    <header class="border-b border-neon-green/20 pb-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+        <div>
+            <div class="text-[10px] text-neon-green/50 font-bold tracking-widest">COGNITIVE INDICATOR ARCHITECTURE // PROTO_v2.0</div>
+            <h1 class="text-xl md:text-2xl font-black text-neon-green tracking-wider uppercase terminal-glow-green">
+                THE WEREWOLF MATRIX: THINKING PROTOTYPE
+            </h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-neon-green animate-ping"></span>
+            <span class="text-[10px] font-bold text-neon-green bg-neon-green/10 border border-neon-green/20 px-2 py-1 uppercase tracking-wider">
+                LIVE COMPILING STATUS
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 relative z-10 min-h-0">
+        
+        <!-- Sidebar Controls & Variant Selector -->
+        <section class="lg:col-span-1 flex flex-col gap-6 bg-surface-container-lowest border border-neon-green/20 p-6">
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-neon-green/60 mb-3 border-b border-neon-green/10 pb-1">
+                    1. SELECT ACTIVE COGNITIVE MODE
+                </h3>
+                <div class="space-y-3">
+                    <button onclick="setMode('terminal')" id="btn-mode-terminal" class="w-full text-left p-3 border border-neon-green/50 bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-all">
+                        <div class="text-xs font-black uppercase tracking-widest">MODE A: TERMINAL MATRIX</div>
+                        <div class="text-[10px] opacity-60 mt-1 uppercase">Retro log streams & prompt compilation counters.</div>
+                    </button>
+                    <button onclick="setMode('pulse')" id="btn-mode-pulse" class="w-full text-left p-3 border border-white/5 hover:border-white/20 text-white/50 hover:text-white transition-all">
+                        <div class="text-xs font-black uppercase tracking-widest">MODE B: QUANTUM PULSE</div>
+                        <div class="text-[10px] opacity-60 mt-1 uppercase">Dynamic waveform bars & active glowing nodes.</div>
+                    </button>
+                    <button onclick="setMode('rain')" id="btn-mode-rain" class="w-full text-left p-3 border border-white/5 hover:border-white/20 text-white/50 hover:text-white transition-all">
+                        <div class="text-xs font-black uppercase tracking-widest">MODE C: BINARY STREAMS</div>
+                        <div class="text-[10px] opacity-60 mt-1 uppercase">Cascading columns of falling data channels.</div>
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-neon-green/60 mb-3 border-b border-neon-green/10 pb-1">
+                    2. RE-TRIGGER TURN SEQUENCE
+                </h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="triggerTurn(0)" class="p-2 border border-neon-green/20 hover:border-neon-green text-neon-green bg-neon-green/5 text-[10px] font-bold uppercase tracking-wider">
+                        KAICHENG
+                    </button>
+                    <button onclick="triggerTurn(1)" class="p-2 border border-electric-blue/20 hover:border-electric-blue text-electric-blue bg-electric-blue/5 text-[10px] font-bold uppercase tracking-wider">
+                        HAIREN
+                    </button>
+                    <button onclick="triggerTurn(2)" class="p-2 border border-hot-pink/20 hover:border-hot-pink text-hot-pink bg-hot-pink/5 text-[10px] font-bold uppercase tracking-wider">
+                        SHERRAI
+                    </button>
+                    <button onclick="triggerTurn(3)" class="p-2 border border-amber/20 hover:border-amber text-amber bg-amber/5 text-[10px] font-bold uppercase tracking-wider">
+                        KAIZUKI
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-auto pt-4 border-t border-neon-green/10 text-[10px] text-neon-green/40 leading-relaxed uppercase">
+                INTELLIGENT AGENTS CHOOSE STRATEGY SUBROUTINES TO SIMULATE COMPILER DYNAMICS. CLICK OR TRIGGER TURNS TO PREVIEW.
+            </div>
+        </section>
+
+        <!-- Interactive Sandbox & Chat Simulation -->
+        <section class="lg:col-span-3 flex flex-col gap-6 min-h-0">
+            
+            <!-- Agent Cards Grid -->
+            <div class="grid grid-cols-4 gap-4">
+                <!-- Subject 1: Kaicheng -->
+                <div id="card-0" onclick="triggerTurn(0)" class="relative bg-surface-container-low border-[3px] border-neon-green/30 opacity-70 hover:opacity-90 transition-all cursor-pointer p-4 group overflow-hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[9px] font-bold text-neon-green/40 uppercase">LLM_01</span>
+                        <!-- Active overlay container inside card -->
+                        <div id="card-overlay-0" class="hidden text-[8px] font-black uppercase text-neon-green px-1.5 py-0.5 border border-neon-green bg-neon-green/10 animate-pulse">THINKING</div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center h-20 relative">
+                        <span class="material-symbols-outlined text-4xl text-neon-green/40 group-hover:text-neon-green/70 transition-colors">change_history</span>
+                        <div class="text-[11px] font-bold text-neon-green mt-2">KAICHENG</div>
+                    </div>
+                </div>
+
+                <!-- Subject 2: Hairen -->
+                <div id="card-1" onclick="triggerTurn(1)" class="relative bg-surface-container-low border-[3px] border-electric-blue/30 opacity-70 hover:opacity-90 transition-all cursor-pointer p-4 group overflow-hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[9px] font-bold text-electric-blue/40 uppercase">LLM_02</span>
+                        <div id="card-overlay-1" class="hidden text-[8px] font-black uppercase text-electric-blue px-1.5 py-0.5 border border-electric-blue bg-electric-blue/10 animate-pulse">THINKING</div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center h-20 relative">
+                        <span class="material-symbols-outlined text-4xl text-electric-blue/40 group-hover:text-electric-blue/70 transition-colors">square</span>
+                        <div class="text-[11px] font-bold text-electric-blue mt-2">HAIREN</div>
+                    </div>
+                </div>
+
+                <!-- Subject 3: Sherrai -->
+                <div id="card-2" onclick="triggerTurn(2)" class="relative bg-surface-container-low border-[3px] border-hot-pink/30 opacity-70 hover:opacity-90 transition-all cursor-pointer p-4 group overflow-hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[9px] font-bold text-hot-pink/40 uppercase">LLM_03</span>
+                        <div id="card-overlay-2" class="hidden text-[8px] font-black uppercase text-hot-pink px-1.5 py-0.5 border border-hot-pink bg-hot-pink/10 animate-pulse">THINKING</div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center h-20 relative">
+                        <span class="material-symbols-outlined text-4xl text-hot-pink/40 group-hover:text-hot-pink/70 transition-colors">diamond</span>
+                        <div class="text-[11px] font-bold text-hot-pink mt-2">SHERRAI</div>
+                    </div>
+                </div>
+
+                <!-- Subject 4: Kaizuki -->
+                <div id="card-3" onclick="triggerTurn(3)" class="relative bg-surface-container-low border-[3px] border-amber/30 opacity-70 hover:opacity-90 transition-all cursor-pointer p-4 group overflow-hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[9px] font-bold text-amber/40 uppercase">LLM_04</span>
+                        <div id="card-overlay-3" class="hidden text-[8px] font-black uppercase text-amber px-1.5 py-0.5 border border-amber bg-amber/10 animate-pulse">THINKING</div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center h-20 relative">
+                        <span class="material-symbols-outlined text-4xl text-amber/40 group-hover:text-amber/70 transition-colors">hexagon</span>
+                        <div class="text-[11px] font-bold text-amber mt-2">KAIZUKI</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal Dialogue Viewport -->
+            <div class="flex-1 flex flex-col min-h-0 bg-surface-container-lowest border border-neon-green/20 p-6 relative">
+                <!-- Top gradient highlight -->
+                <div class="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-neon-green/35 to-transparent"></div>
+                
+                <!-- Scrollable Chat container -->
+                <div id="chat-viewport" class="flex-1 overflow-y-auto space-y-6 text-[13px] leading-relaxed custom-scrollbar pb-4 pr-2">
+                    <!-- Intro Header -->
+                    <div class="space-y-1 mb-6">
+                        <div class="text-neon-green/40 text-[10px] font-bold uppercase tracking-wider">SYSTEM_INITIALIZATION</div>
+                        <div class="pl-4 border-l border-neon-green/20 text-neon-green/80 uppercase text-[11px]">
+                            LOBBY PROTOCOL SECURED. ACTIVE SPEAKING LOOP ACTIVE.
+                        </div>
+                    </div>
+
+                    <!-- Simulated History Message -->
+                    <div class="space-y-2 max-w-2xl mb-6">
+                        <div class="text-neon-green text-[11px] font-bold tracking-widest uppercase flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[13px]">change_history</span> KAICHENG
+                        </div>
+                        <div class="pl-4 border-l-2 border-neon-green text-neon-green leading-relaxed text-[13px]">
+                            I highly recommend Binary Search as it provides the most efficient logarithmic O(log n) performance which works optimally over large datasets.
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Active Indicator Spot -->
+                    <div id="dynamic-thinking-spot">
+                        <!-- Custom Thinking Element gets inserted here -->
+                    </div>
+                </div>
+
+                <!-- Input box placeholder matching active speaker style -->
+                <div class="mt-6 pt-4 border-t border-neon-green/10">
+                    <div id="proto-form" class="flex items-center gap-4 bg-surface-container-low px-4 py-3 border border-neon-green/20">
+                        <span id="proto-arrow" class="text-neon-green font-bold text-lg animate-pulse">&gt;</span>
+                        <div id="proto-input" class="flex-1 text-[13px] font-bold text-neon-green/40 uppercase tracking-wider">
+                            WAITING FOR THE SENSOR STREAM TO RESOLVE SPEAKING QUEUES...
+                        </div>
+                        <div id="proto-cursor" class="w-1.5 h-5 bg-neon-green shadow-[0_0_8px_rgba(0,255,102,0.8)]"></div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Prototype Logic -->
+    <script>
+        const suspects = [
+            {
+                name: 'KAICHENG',
+                color: 'text-neon-green',
+                border: 'border-neon-green',
+                bg: 'bg-neon-green/5',
+                cardBorder: 'border-neon-green',
+                cardBorderActive: 'border-[4px] border-neon-green shadow-[0_0_15px_rgba(0,255,102,0.4)] opacity-100',
+                cardBorderInactive: 'border border-neon-green/20 opacity-50 hover:opacity-70',
+                overlayColor: 'text-neon-green border-neon-green bg-neon-green/10',
+                icon: 'change_history',
+                glow: 'terminal-glow-green',
+                formBorder: 'focus-within:border-neon-green/50',
+                placeholder: 'KAICHENG IS COMPILING NEURAL COGNITION VECTOR...'
+            },
+            {
+                name: 'HAIREN',
+                color: 'text-electric-blue',
+                border: 'border-electric-blue',
+                bg: 'bg-electric-blue/5',
+                cardBorder: 'border-electric-blue',
+                cardBorderActive: 'border-[4px] border-electric-blue shadow-[0_0_15px_rgba(0,209,255,0.4)] opacity-100',
+                cardBorderInactive: 'border border-electric-blue/20 opacity-50 hover:opacity-70',
+                overlayColor: 'text-electric-blue border-electric-blue bg-electric-blue/10',
+                icon: 'square',
+                glow: 'terminal-glow-blue',
+                formBorder: 'focus-within:border-electric-blue/50',
+                placeholder: 'HAIREN IS STREAMING CONTEXT METADATA GATES...'
+            },
+            {
+                name: 'SHERRAI',
+                color: 'text-hot-pink',
+                border: 'border-hot-pink',
+                bg: 'bg-hot-pink/5',
+                cardBorder: 'border-hot-pink',
+                cardBorderActive: 'border-[4px] border-hot-pink shadow-[0_0_15px_rgba(255,0,122,0.4)] opacity-100',
+                cardBorderInactive: 'border border-hot-pink/20 opacity-50 hover:opacity-70',
+                overlayColor: 'text-hot-pink border-hot-pink bg-hot-pink/10',
+                icon: 'diamond',
+                glow: 'terminal-glow-pink',
+                formBorder: 'focus-within:border-hot-pink/50',
+                placeholder: 'SHERRAI IS RUNNING ANALYTICAL PARALLEX FILTERS...'
+            },
+            {
+                name: 'KAIZUKI',
+                color: 'text-amber',
+                border: 'border-amber',
+                bg: 'bg-amber/5',
+                cardBorder: 'border-amber',
+                cardBorderActive: 'border-[4px] border-amber shadow-[0_0_15px_rgba(255,184,0,0.4)] opacity-100',
+                cardBorderInactive: 'border border-amber/20 opacity-50 hover:opacity-70',
+                overlayColor: 'text-amber border-amber bg-amber/10',
+                icon: 'hexagon',
+                glow: 'terminal-glow-amber',
+                formBorder: 'focus-within:border-amber/50',
+                placeholder: 'KAIZUKI IS FORMULATING DIALOGUE TEMPLATE SCHEMAS...'
+            }
+        ];
+
+        let activeMode = 'terminal'; // terminal, pulse, rain
+        let activeSpeakerIndex = 1;  // Hairen by default
+
+        // Subroutine messages typed out in terminal variant
+        const subroutines = [
+            "FETCHING COMPILER INSTRUCTIONS...",
+            "RETRIEVING DISCUSSION LOGIC HISTORY...",
+            "RESOLVING CONTEXT WORD MAP VECTOR...",
+            "COMPILING SYSTEM DIALOGUE OUTPUTS..."
+        ];
+
+        let subIndex = 0;
+        let consoleInterval = null;
+
+        function setMode(mode) {
+            // Reset active mode button highlight
+            ['terminal', 'pulse', 'rain'].forEach(m => {
+                const btn = document.getElementById(`btn-mode-${m}`);
+                if (m === mode) {
+                    btn.className = "w-full text-left p-3 border border-neon-green/50 bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-all";
+                } else {
+                    btn.className = "w-full text-left p-3 border border-white/5 hover:border-white/20 text-white/50 hover:text-white transition-all";
+                }
+            });
+
+            activeMode = mode;
+            updateThinkingView();
+        }
+
+        function triggerTurn(index) {
+            activeSpeakerIndex = index;
+            updateThinkingView();
+        }
+
+        function updateThinkingView() {
+            const suspect = suspects[activeSpeakerIndex];
+            
+            // 1. Update Speaker Cards Selection and overlay Thinking badges
+            suspects.forEach((s, idx) => {
+                const card = document.getElementById(`card-${idx}`);
+                const badge = document.getElementById(`card-overlay-${idx}`);
+                
+                if (idx === activeSpeakerIndex) {
+                    card.className = `relative bg-surface-container-low p-4 group overflow-hidden ${s.cardBorderActive}`;
+                    if (badge) {
+                        badge.className = `text-[8px] font-black uppercase px-1.5 py-0.5 border ${s.overlayColor} animate-pulse`;
+                        badge.classList.remove('hidden');
+                    }
+                } else {
+                    card.className = `relative bg-surface-container-low p-4 group overflow-hidden ${s.cardBorderInactive}`;
+                    if (badge) {
+                        badge.classList.add('hidden');
+                    }
+                }
+            });
+
+            // 2. Update Input Box styles to match active speaking suspect
+            const form = document.getElementById('proto-form');
+            const arrow = document.getElementById('proto-arrow');
+            const input = document.getElementById('proto-input');
+            const cursor = document.getElementById('proto-cursor');
+
+            if (form && arrow && input && cursor) {
+                // Reset colors
+                form.className = `flex items-center gap-4 bg-surface-container-low px-4 py-3 border border-white/5 transition-colors duration-300 ${suspect.formBorder}`;
+                arrow.className = `${suspect.color} font-bold text-lg animate-pulse ${suspect.glow}`;
+                input.className = `flex-1 text-[13px] font-bold ${suspect.color} uppercase tracking-wider transition-colors duration-300`;
+                input.textContent = suspect.placeholder;
+                cursor.className = `w-1.5 h-5 bg-current shadow-[0_0_8px_currentColor] transition-all duration-300 ${suspect.color}`;
+            }
+
+            // 3. Clear existing console typings if any
+            if (consoleInterval) {
+                clearInterval(consoleInterval);
+                consoleInterval = null;
+            }
+
+            // 4. Render Dynamic Thinking block inside the chat bubble area
+            const dynamicSpot = document.getElementById('dynamic-thinking-spot');
+            
+            if (activeMode === 'terminal') {
+                subIndex = 0;
+                dynamicSpot.innerHTML = `
+                    <div class="space-y-2 max-w-3xl mb-6">
+                        <div class="flex items-center gap-2 ${suspect.color} text-[11px] font-bold tracking-widest uppercase">
+                            <span class="material-symbols-outlined text-[13px] animate-spin">${suspect.icon}</span> ${suspect.name}
+                        </div>
+                        <div class="pl-4 border-l-2 ${suspect.border} ${suspect.color} space-y-1 text-[11px] font-mono opacity-80 leading-relaxed uppercase">
+                            <div class="flex items-center gap-2">
+                                <span class="animate-pulse">▶</span> <span id="typing-subroutine-log">COMPILING CONTEXT VECTORS...</span>
+                            </div>
+                            <div class="text-[10px] text-white/50 tracking-wider">
+                                THINK_UPTIME: <span id="uptime-count">0.5</span>s [■■■■■■■░░░] 70%
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Subroutine typing rotation effect
+                consoleInterval = setInterval(() => {
+                    const logEl = document.getElementById('typing-subroutine-log');
+                    const uptimeEl = document.getElementById('uptime-count');
+                    
+                    if (logEl) {
+                        subIndex = (subIndex + 1) % subroutines.length;
+                        logEl.textContent = subroutines[subIndex];
+                    }
+                    if (uptimeEl) {
+                        let currentUptime = parseFloat(uptimeEl.textContent);
+                        uptimeEl.textContent = (currentUptime + 0.4).toFixed(1);
+                    }
+                }, 1000);
+
+            } else if (activeMode === 'pulse') {
+                dynamicSpot.innerHTML = `
+                    <div class="space-y-2 max-w-3xl mb-6">
+                        <div class="flex items-center gap-2 ${suspect.color} text-[11px] font-bold tracking-widest uppercase">
+                            <span class="material-symbols-outlined text-[13px] animate-ping">${suspect.icon}</span> ${suspect.name}
+                        </div>
+                        <div class="pl-4 border-l-2 ${suspect.border} flex items-center gap-6 py-2">
+                            <!-- Visual Waveform Lines -->
+                            <div class="flex items-end gap-1 h-6">
+                                <div class="w-[3px] bg-current ${suspect.color} wave-bar" style="height: 100%; animation-delay: 0.1s;"></div>
+                                <div class="w-[3px] bg-current ${suspect.color} wave-bar" style="height: 60%; animation-delay: 0.3s;"></div>
+                                <div class="w-[3px] bg-current ${suspect.color} wave-bar" style="height: 80%; animation-delay: 0.5s;"></div>
+                                <div class="w-[3px] bg-current ${suspect.color} wave-bar" style="height: 40%; animation-delay: 0.2s;"></div>
+                                <div class="w-[3px] bg-current ${suspect.color} wave-bar" style="height: 70%; animation-delay: 0.4s;"></div>
+                                <div class="w-[3px] bg-current ${suspect.color} wave-bar" style="height: 90%; animation-delay: 0.6s;"></div>
+                            </div>
+                            <div class="text-[12px] italic ${suspect.color} opacity-60 animate-pulse tracking-widest uppercase">
+                                WAVEFORM NODE FIRING (COGNITIVE_UPTIME: ACTIVE)...
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (activeMode === 'rain') {
+                dynamicSpot.innerHTML = `
+                    <div class="space-y-2 max-w-3xl mb-6">
+                        <div class="flex items-center gap-2 ${suspect.color} text-[11px] font-bold tracking-widest uppercase">
+                            <span class="material-symbols-outlined text-[13px]">${suspect.icon}</span> ${suspect.name}
+                        </div>
+                        <div class="pl-4 border-l-2 ${suspect.border} relative h-16 w-80 bg-black/40 border border-white/5 overflow-hidden p-2 flex items-center justify-center">
+                            <!-- Dynamic Binary rain channels -->
+                            <div class="absolute inset-0 flex justify-around text-[7px] font-mono leading-none tracking-tighter select-none pointer-events-none opacity-20 ${suspect.color}">
+                                <div class="matrix-rain-line">1010101010101010101010</div>
+                                <div class="matrix-rain-line" style="animation-delay: 0.7s;">010101010101010101</div>
+                                <div class="matrix-rain-line" style="animation-delay: 1.5s;">10110010101011010</div>
+                                <div class="matrix-rain-line" style="animation-delay: 2.2s;">001011100010101011</div>
+                            </div>
+                            <div class="relative z-10 text-[11px] font-bold uppercase tracking-widest ${suspect.color} text-center">
+                                DECODING STREAM SEQUENCE...
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Scroll chat to bottom to see indicator instantly
+            const chatViewport = document.getElementById('chat-viewport');
+            if (chatViewport) {
+                chatViewport.scrollTop = chatViewport.scrollHeight;
+            }
+        }
+
+        // Initialize view on load
+        window.addEventListener('DOMContentLoaded', () => {
+            updateThinkingView();
+        });
+    </script>
+</body>
+</html>

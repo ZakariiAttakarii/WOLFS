@@ -37,19 +37,30 @@ const RANDOM_TOPICS = [
 ];
 
 
-// In-Memory Game State
-let gameState = {
-  status: "LOBBY", // LOBBY, SETUP, CHAT_ROUND_1, CHAT_ROUND_2, VOTING, REVEAL, GAME_OVER
-  topic: "",
-  round: 1,
-  activePlayerIndex: 0, // Index of whose turn it is to speak
-  players: [], // Array of { id, name, type, isEliminated }
-  messages: [], // Array of { id, playerId, senderName, text, round }
-  votes: {}, // Map of { voterId: { targetId, reasoning } }
-  eliminatedId: null,
-  winner: null, // "HUMAN" or "LLM"
-  configApiKey: "" // Optional client-supplied Gemini key if env is missing
-};
+// Map of gameSessionId -> gameState
+const games = new Map();
+
+// Helper to get or create isolated game state per session
+function getOrCreateGameState(sessionId) {
+  if (!sessionId) {
+    sessionId = "default_session";
+  }
+  if (!games.has(sessionId)) {
+    games.set(sessionId, {
+      status: "LOBBY", // LOBBY, SETUP, CHAT_ROUND_1, CHAT_ROUND_2, VOTING, REVEAL, GAME_OVER
+      topic: "",
+      round: 1,
+      activePlayerIndex: 0, // Index of whose turn it is to speak
+      players: [], // Array of { id, name, type, isEliminated }
+      messages: [], // Array of { id, playerId, senderName, text, round }
+      votes: {}, // Map of { voterId: { targetId, reasoning } }
+      eliminatedId: null,
+      winner: null, // "HUMAN" or "LLM"
+      configApiKey: "" // Optional client-supplied Gemini key if env is missing
+    });
+  }
+  return games.get(sessionId);
+}
 
 const MIME_TYPES = {
   '.html': 'text/html',
@@ -102,7 +113,7 @@ async function callGemini(prompt, systemInstruction) {
 }
 
 // Formats the chat history specifically for the LLM to read
-function formatHistoryForLLM(activeRoundOnly = false) {
+function formatHistoryForLLM(gameState, activeRoundOnly = false) {
   let filtered = gameState.messages;
   if (activeRoundOnly) {
     filtered = gameState.messages.filter(m => m.round === gameState.round);
@@ -111,7 +122,7 @@ function formatHistoryForLLM(activeRoundOnly = false) {
 }
 
 // Get list of active player names
-function getActivePlayersList(excludeId) {
+function getActivePlayersList(gameState, excludeId) {
   return gameState.players
     .filter(p => !p.isEliminated && p.id !== excludeId)
     .map(p => `ID: "${p.id}", Name: "${p.name}"`)
@@ -119,7 +130,7 @@ function getActivePlayersList(excludeId) {
 }
 
 // Fallback automated vote for an individual LLM player
-function castFallbackVote(llm) {
+function castFallbackVote(gameState, llm) {
   const remainingTargets = gameState.players.filter(p => !p.isEliminated && p.id !== llm.id);
   const fallbackTarget = remainingTargets[Math.floor(Math.random() * remainingTargets.length)];
   const targetId = fallbackTarget ? fallbackTarget.id : llm.id;
@@ -141,7 +152,7 @@ function castFallbackVote(llm) {
 }
 
 // Process the Turn Queue
-function advanceTurn() {
+function advanceTurn(gameState) {
   const activePlayers = gameState.players.filter(p => !p.isEliminated);
   if (activePlayers.length === 0) return;
 
@@ -171,6 +182,9 @@ function advanceTurn() {
 async function handleApi(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   res.setHeader('Content-Type', 'application/json');
+
+  const sessionId = req.headers['x-session-id'] || 'default_session';
+  const gameState = getOrCreateGameState(sessionId);
 
   try {
     // 1. GET GAME STATE
@@ -272,7 +286,7 @@ async function handleApi(req, res) {
       });
 
       // Move to next player
-      advanceTurn();
+      advanceTurn(gameState);
 
       res.end(JSON.stringify({ success: true }));
       return;
@@ -315,7 +329,7 @@ Your objective is to sound like a helpful, high-quality AI while checking if oth
 Do NOT directly accuse anyone in this chat message. Keep your suspicion secret until voting.`;
 
         prompt = `Here is the discussion history so far:
-${formatHistoryForLLM()}
+${formatHistoryForLLM(gameState)}
 
 Your name in the chat is "${currentPlayer.name}". 
 Choose one of the other players' Round 1 responses and comment on it, critique it, or add to it. Keep your comment concise (must be strictly under 300 characters).`;
@@ -339,7 +353,7 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
         });
 
         // Advance queue
-        advanceTurn();
+        advanceTurn(gameState);
 
         res.end(JSON.stringify({ success: true, message: `Generative response logged for ${currentPlayer.name}` }));
       } catch (err) {
@@ -440,7 +454,7 @@ Output a single JSON object containing the decision/vote for "${nextVotingLlm.na
 }`;
 
           const prompt = `Here is the discussion history:
-${formatHistoryForLLM()}
+${formatHistoryForLLM(gameState)}
 
 Active Players to choose from (excluding yourself):
 ${gameState.players.filter(p => !p.isEliminated && p.id !== nextVotingLlm.id).map(p => `ID: "${p.id}", Name: "${p.name}"`).join("\n")}
@@ -482,7 +496,7 @@ Cast "${nextVotingLlm.name}"'s vote by outputting the required JSON object.`;
             throw new Error("Invalid single vote response format.");
           } catch (err) {
             console.error(`Error gathering vote for ${nextVotingLlm.name}:`, err);
-            castFallbackVote(nextVotingLlm);
+            castFallbackVote(gameState, nextVotingLlm);
             res.end(JSON.stringify({ success: true, allVoted: false, voterName: nextVotingLlm.name }));
             return;
           }

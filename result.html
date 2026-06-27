@@ -112,7 +112,7 @@
 
         <!-- Navigation Action Buttons -->
         <div class="flex justify-center w-full max-w-sm z-10">
-            <button onclick="window.location.href='/gameplay.html'" id="btn-replay" class="w-full border border-neon-green bg-neon-green text-black hover:bg-transparent hover:text-neon-green font-bold uppercase transition-all py-4 text-xs tracking-widest text-center cursor-pointer">
+            <button onclick="replayGame()" id="btn-replay" class="w-full border border-neon-green bg-neon-green text-black hover:bg-transparent hover:text-neon-green font-bold uppercase transition-all py-4 text-xs tracking-widest text-center cursor-pointer">
                 BACK TO GAMEPLAY
             </button>
         </div>
@@ -251,6 +251,23 @@
             } else {
                 if (reasoningBox) reasoningBox.classList.add('hidden');
             }
+        }
+
+        async function replayGame() {
+            try {
+                const sessionId = localStorage.getItem('wolfs_session_id');
+                const headers = { 'Content-Type': 'application/json' };
+                if (sessionId) {
+                    headers['x-session-id'] = sessionId;
+                }
+                await fetch('/api/game/reset', { 
+                    method: 'POST',
+                    headers: headers
+                });
+            } catch (err) {
+                console.error("Error resetting game:", err);
+            }
+            window.location.href = '/gameplay.html';
         }
 
         // Initialize state check based on URL parameters (?status=win or ?status=loss)

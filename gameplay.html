@@ -212,6 +212,29 @@
 </nav>
 
 <script>
+    // Intercept fetch to automatically attach x-session-id header
+    (function() {
+        let sessionId = localStorage.getItem('wolfs_session_id');
+        if (!sessionId) {
+            sessionId = 'sess_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now();
+            localStorage.setItem('wolfs_session_id', sessionId);
+        }
+
+        const originalFetch = window.fetch;
+        window.fetch = async function(resource, init) {
+            init = init || {};
+            init.headers = init.headers || {};
+            if (init.headers instanceof Headers) {
+                init.headers.set('x-session-id', sessionId);
+            } else if (Array.isArray(init.headers)) {
+                init.headers.push(['x-session-id', sessionId]);
+            } else {
+                init.headers['x-session-id'] = sessionId;
+            }
+            return originalFetch(resource, init);
+        };
+    })();
+
     // State management
     let time = 120; // Start with 2 minutes
     const display = document.getElementById('countdown');

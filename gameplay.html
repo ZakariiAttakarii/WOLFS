@@ -557,7 +557,7 @@
                 const setupRes = await fetch('/api/game/setup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ playerName: "TOTALLY_AI (YOU)" })
+                    body: JSON.stringify({ playerName: "YOU" })
                 });
                 const setupData = await setupRes.json();
                 if (setupData.success) {

@@ -323,17 +323,17 @@ Do NOT mention the game, suspects, or voting yet.`;
 Write your response to this topic. Do NOT write more than 140 characters (strictly under 150 characters). Write only your response.`;
 
       } else {
-        // Round 2: Critique or respond to previous player statements
+        // Round 2: Critique, respond to, or accuse previous player statements
         systemInstruction = `You are playing "The Werewolf Matrix", the reverse Turing test game.
 Round 2 has started. You must now review the discussion from Round 1 and write a brief comment, response, or critique addressing another player's answer.
-Your objective is to sound like a helpful, high-quality AI while checking if others make human-like mistakes (typos, informal slang, lack of structure, defensiveness, or being overly casual).
-Do NOT directly accuse anyone in this chat message. Keep your suspicion secret until voting.`;
+Your objective is to sound like a helpful, high-quality AI, but you should also actively look for human-like mistakes (typos, informal slang, lack of structure, defensiveness, or being overly casual). 
+You are encouraged to directly or subtly accuse or question anyone you suspect of being the human werewolf in this chat message.`;
 
         prompt = `Here is the discussion history so far:
 ${formatHistoryForLLM(gameState)}
 
 Your name in the chat is "${currentPlayer.name}". 
-Choose one of the other players' Round 1 responses and comment on it, critique it, or add to it. Do NOT write more than 140 characters (strictly under 150 characters).`;
+Choose one of the other players' Round 1 responses. Comment on it, critique it, or directly accuse/question them if you suspect they are the human player. Keep your entire response under 140 characters (strictly under 150 characters).`;
       }
 
       try {

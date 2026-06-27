@@ -4,7 +4,8 @@ FROM node:20-alpine
 WORKDIR /usr/src/app
 
 # Copy application files
-COPY package.json server.js index.html gameplay.html tutorial.html style.css app.js ./
+COPY package.json server.js index.html gameplay.html tutorial.html result.html style.css app.js ./
+COPY art ./art/
 
 # Expose default port
 EXPOSE 8080

@@ -57,7 +57,10 @@
 <span class="font-bold tracking-tight">SYS_MANUAL_v1.0 // REVERSE_TURING_WEREWOLF_GUIDE</span>
 </div>
 <div class="flex items-center gap-8 text-[12px]">
-
+<button onclick="hardResetGame()" class="border border-red-500/50 hover:border-red-500 bg-red-500/10 hover:bg-red-500/30 text-red-500 px-3 py-1 text-xs font-bold uppercase tracking-widest transition-all active:translate-y-0.5 flex items-center gap-1.5 cursor-pointer z-50">
+<span class="material-symbols-outlined text-sm">restart_alt</span>
+HARD_RESET
+</button>
 <span id="clock" class="">13:06:00</span>
 <div class="w-6 h-6 grayscale brightness-125 contrast-150">
 
@@ -207,7 +210,26 @@
 <span class="">(C) 20XX REV_TURING_NETWORKS</span>
 </footer>
 <script>
-        function updateClock() {
+    async function hardResetGame() {
+        if (confirm("Are you sure you want to HARD RESET everything?\nThis will clear all game state and session history, and return you to the main lobby.")) {
+            try {
+                const sessionId = localStorage.getItem('wolfs_session_id');
+                if (sessionId) {
+                    await fetch('/api/game/reset', {
+                        method: 'POST',
+                        headers: { 'x-session-id': sessionId }
+                    });
+                }
+            } catch (e) {
+                console.error("Failed to reset game session on server:", e);
+            }
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/';
+        }
+    }
+
+    function updateClock() {
             const now = new Date();
             const time = now.toTimeString().split(' ')[0];
             document.getElementById('clock').textContent = time;

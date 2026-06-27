@@ -69,6 +69,18 @@
 <style type="text/css"></style><style type="text/css"></style></head>
 <body class="min-h-screen overflow-hidden selection:bg-primary selection:text-on-primary">
 <!-- Status Bar (Kernel v1.0.4) -->
+<header class="fixed top-0 w-full z-50 bg-black/80 border-b border-primary/10 flex justify-between items-center px-margin-mobile h-12 md:px-6 backdrop-blur-md">
+    <div class="flex items-center gap-4">
+        <span class="text-xs font-bold tracking-[0.2em] uppercase terminal-glow text-primary">REVERSE TURING // KERNEL_v1.0.4</span>
+    </div>
+    <div class="flex items-center gap-6">
+        <span id="clock" class="text-xs text-primary/60 font-mono">00:00:00</span>
+        <button onclick="hardResetGame()" class="border border-red-500/50 hover:border-red-500 bg-red-500/10 hover:bg-red-500/30 text-red-500 px-3 py-1 text-xs font-bold uppercase tracking-widest transition-all active:translate-y-0.5 flex items-center gap-1.5 cursor-pointer z-50">
+            <span class="material-symbols-outlined text-sm">restart_alt</span>
+            HARD_RESET
+        </button>
+    </div>
+</header>
 
 <!-- Secondary Nav / Top Bar -->
 
@@ -144,6 +156,25 @@
 </div>
 </main>
 <script>
+    async function hardResetGame() {
+        if (confirm("Are you sure you want to HARD RESET everything?\nThis will clear all game state and session history, and return you to the main lobby.")) {
+            try {
+                const sessionId = localStorage.getItem('wolfs_session_id');
+                if (sessionId) {
+                    await fetch('/api/game/reset', {
+                        method: 'POST',
+                        headers: { 'x-session-id': sessionId }
+                    });
+                }
+            } catch (e) {
+                console.error("Failed to reset game session on server:", e);
+            }
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/';
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         // Simple clock for the status bar
         function updateClock() {

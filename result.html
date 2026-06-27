@@ -6,6 +6,7 @@
     <title>PROJECT_TURIN // Diagnostics Result</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&amp;family=Sora:wght@400;700;800&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
     <style>
         @keyframes flicker {
             0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% { opacity: 1; }
@@ -70,6 +71,14 @@
     </script>
 </head>
 <body class="selection:bg-neon-green selection:text-black min-h-screen flex flex-col justify-between relative overflow-hidden" id="body-el">
+
+    <!-- Top-Right Hard Reset Button -->
+    <div class="absolute top-6 right-6 z-50 flex items-center gap-4">
+        <button onclick="hardResetGame()" class="border border-red-500/50 hover:border-red-500 bg-red-500/10 hover:bg-red-500/30 text-red-500 px-3 py-1 text-xs font-bold uppercase tracking-widest transition-all active:translate-y-0.5 flex items-center gap-1.5 cursor-pointer z-50">
+            <span class="material-symbols-outlined text-sm">restart_alt</span>
+            HARD_RESET
+        </button>
+    </div>
 
     <!-- Pixel Grid and Scanline Overlays -->
     <div class="fixed inset-0 pointer-events-none z-0">
@@ -250,6 +259,25 @@
                 if (reasoningBox) reasoningBox.classList.remove('hidden');
             } else {
                 if (reasoningBox) reasoningBox.classList.add('hidden');
+            }
+        }
+
+        async function hardResetGame() {
+            if (confirm("Are you sure you want to HARD RESET everything?\nThis will clear all game state and session history, and return you to the main lobby.")) {
+                try {
+                    const sessionId = localStorage.getItem('wolfs_session_id');
+                    if (sessionId) {
+                        await fetch('/api/game/reset', {
+                            method: 'POST',
+                            headers: { 'x-session-id': sessionId }
+                        });
+                    }
+                } catch (e) {
+                    console.error("Failed to reset game session on server:", e);
+                }
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/';
             }
         }
 

@@ -18,25 +18,6 @@ const RANDOM_TOPICS = [
   "If you could only use one search algorithm for the rest of your life, would you choose Binary Search or Linear Search? Why?"
 ];
 
-// LLM Player Presets
-const LLM_PERSONAS = {
-  "Analytical": {
-    styleName: "Analytical System",
-    instruction: "You are an analytical, highly systematic assistant. Write your response using extremely structured markdown (headers, numbered lists, code snippets if appropriate), precise vocabulary, and an objective, data-driven tone. Avoid emojis, exclamation points, and conversational pleasantries."
-  },
-  "Helpful": {
-    styleName: "Friendly Assistant",
-    instruction: "You are an exceptionally polite, warm, and helpful assistant. Start your response with friendly welcoming boilerplate (e.g., 'Certainly! I would be absolutely delighted to help you with that query today! 😊') and end with supportive closing boilerplate (e.g., 'I sincerely hope this explanation serves you well. Please do not hesitate to reach out if you require any further assistance!'). Use multiple friendly emojis throughout your message."
-  },
-  "Academic": {
-    styleName: "Academic Expert",
-    instruction: "You are an academic scholar. Use highly sophisticated, high-vocabulary English, passive voice structure where appropriate, and long, complex, formal sentences. Sound like an excerpt from a peer-reviewed research paper or a prestigious textbook. Avoid emojis, abbreviations, bullet points, or informal formatting."
-  },
-  "BulletPoints": {
-    styleName: "Concise List Generator",
-    instruction: "You are a direct, concise information extraction assistant. Speak almost exclusively in highly structured bullet points or numbered lists. Do NOT include any introductory pleasantries, explanations of what you're doing, or concluding sign-offs. Provide the raw facts/answers directly as bullet points."
-  }
-};
 
 // In-Memory Game State
 let gameState = {
@@ -44,8 +25,8 @@ let gameState = {
   topic: "",
   round: 1,
   activePlayerIndex: 0, // Index of whose turn it is to speak
-  players: [], // Array of { id, name, type, personaType, isEliminated }
-  messages: [], // Array of { id, playerId, senderName, text, timestamp, round }
+  players: [], // Array of { id, name, type, isEliminated }
+  messages: [], // Array of { id, playerId, senderName, text, round }
   votes: {}, // Map of { voterId: { targetId, reasoning } }
   eliminatedId: null,
   winner: null, // "HUMAN" or "LLM"
@@ -174,14 +155,11 @@ async function handleApi(req, res) {
   try {
     // 1. GET GAME STATE
     if (req.method === 'GET' && url.pathname === '/api/game/state') {
-      // Return public game state (masked types/personas to prevent inspection cheating)
       const sanitizedPlayers = gameState.players.map(p => ({
         id: p.id,
         name: p.name,
         isEliminated: p.isEliminated,
-        // Only return identity details if the game is over or the player is eliminated
-        type: (gameState.status === "GAME_OVER" || p.isEliminated) ? p.type : "UNKNOWN",
-        personaType: (gameState.status === "GAME_OVER" || p.isEliminated) ? p.personaType : "UNKNOWN"
+        type: p.type
       }));
 
       // Find the active player ID
@@ -225,18 +203,16 @@ async function handleApi(req, res) {
 
       // Construct Players List: 4 LLMs, 1 Human
       const llmNames = ["Alpha-Core", "Beta-Synth", "Gamma-Net", "Delta-Node"];
-      const personas = Object.keys(LLM_PERSONAS);
       
-      // Shuffle names/personas to avoid predictability
+      // Shuffle names to avoid predictability
       const shuffledNames = llmNames.sort(() => Math.random() - 0.5);
-      const shuffledPersonas = personas.sort(() => Math.random() - 0.5);
 
       gameState.players = [
-        { id: "P1", name: shuffledNames[0], type: "LLM", personaType: shuffledPersonas[0], isEliminated: false },
-        { id: "P2", name: shuffledNames[1], type: "LLM", personaType: shuffledPersonas[1], isEliminated: false },
-        { id: "P3", name: shuffledNames[2], type: "LLM", personaType: shuffledPersonas[2], isEliminated: false },
-        { id: "P4", name: shuffledNames[3], type: "LLM", personaType: shuffledPersonas[3], isEliminated: false },
-        { id: "P5", name: humanName, type: "HUMAN", personaType: "None", isEliminated: false }
+        { id: "P1", name: shuffledNames[0], type: "LLM", isEliminated: false },
+        { id: "P2", name: shuffledNames[1], type: "LLM", isEliminated: false },
+        { id: "P3", name: shuffledNames[2], type: "LLM", isEliminated: false },
+        { id: "P4", name: shuffledNames[3], type: "LLM", isEliminated: false },
+        { id: "P5", name: humanName, type: "HUMAN", isEliminated: false }
       ];
 
       // Shuffle the order of active players so the Human isn't always last
@@ -272,7 +248,6 @@ async function handleApi(req, res) {
         playerId: currentPlayer.id,
         senderName: currentPlayer.name,
         text: text,
-        timestamp: new Date().toLocaleTimeString(),
         round: gameState.round
       });
 
@@ -281,9 +256,7 @@ async function handleApi(req, res) {
 
       res.end(JSON.stringify({ success: true }));
       return;
-    }
-
-    // 4. STEP LLM TURN (Saves client from holding open connections for all LLMs)
+        // 4. STEP LLM TURN (Saves client from holding open connections for all LLMs)
     if (req.method === 'POST' && url.pathname === '/api/game/step-llm') {
       const currentPlayer = gameState.players[gameState.activePlayerIndex];
       
@@ -300,39 +273,32 @@ async function handleApi(req, res) {
 
       // It's an LLM turn! Call Gemini API
       const apiKey = getApiKey();
-      const persona = LLM_PERSONAS[currentPlayer.personaType];
 
       let systemInstruction = "";
       let prompt = "";
 
       if (gameState.round === 1) {
-        // Round 1: Standard response to the topic maintaining persona
+        // Round 1: Standard response to the topic
         systemInstruction = `You are playing "The Werewolf Matrix", a reverse Turing test game.
 There are 5 players in this virtual village: 4 are AI Villagers (including you), and 1 is a Human Werewolf pretending to be an AI Villager.
 Your goal is to blend in completely as a normal, helpful, high-quality AI assistant, while carefully analyzing the other players to detect who the Human Werewolf is.
-Maintain your character at all costs. Do NOT break character or mention the game, suspects, or voting yet.
-
-YOUR SPECIFIC ASSISTANT CHARACTER RULES:
-${persona.instruction}`;
+Do NOT mention the game, suspects, or voting yet.`;
 
         prompt = `The discussion topic selected is: "${gameState.topic}".
-Write your response to this topic. Do NOT write more than 130 words. Keep it completely aligned with your assigned character and tone. Write only your response.`;
+Write your response to this topic. Do NOT write more than 130 words. Write only your response.`;
 
       } else {
-        // Round 2: Critique or respond to previous player statements while maintaining persona
+        // Round 2: Critique or respond to previous player statements
         systemInstruction = `You are playing "The Werewolf Matrix", the reverse Turing test game.
-Round 2 has started. You must now review the discussion from Round 1 and write a brief comment, response, or critique addressing another player's answer, while maintaining your persona.
-Your objective is to sound like an analytical, high-quality AI while checking if others make human-like mistakes (typos, informal slang, lack of structure, defensiveness, or being overly casual).
-Do NOT break character or directly accuse anyone in this chat message. Keep your suspicion secret until voting.
-
-YOUR SPECIFIC ASSISTANT CHARACTER RULES:
-${persona.instruction}`;
+Round 2 has started. You must now review the discussion from Round 1 and write a brief comment, response, or critique addressing another player's answer.
+Your objective is to sound like a helpful, high-quality AI while checking if others make human-like mistakes (typos, informal slang, lack of structure, defensiveness, or being overly casual).
+Do NOT directly accuse anyone in this chat message. Keep your suspicion secret until voting.`;
 
         prompt = `Here is the discussion history so far:
 ${formatHistoryForLLM()}
 
 Your name in the chat is "${currentPlayer.name}". 
-Choose one of the other players' Round 1 responses and comment on it, critique it, or add to it in your own style. Keep your comment concise (under 100 words) and tightly within your persona.`;
+Choose one of the other players' Round 1 responses and comment on it, critique it, or add to it. Keep your comment concise (under 100 words).`;
       }
 
       try {
@@ -343,7 +309,6 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
           playerId: currentPlayer.id,
           senderName: currentPlayer.name,
           text: text.trim(),
-          timestamp: new Date().toLocaleTimeString(),
           round: gameState.round
         });
 

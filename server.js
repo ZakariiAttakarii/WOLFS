@@ -421,7 +421,7 @@ Choose one of the other players' Round 1 responses. You MUST write an aggressive
       return;
     }
 
-    // 6. PROCESS LLM VOTES (Runs one LLM vote at a time sequentially, and aggregates when everyone has voted)
+    // 6. PROCESS LLM VOTES (Runs all remaining LLM votes in parallel, and compiles results instantly)
     if (req.method === 'POST' && url.pathname === '/api/game/step-llm-votes') {
       if (gameState.status !== "VOTING") {
         res.statusCode = 400;
@@ -448,15 +448,16 @@ Choose one of the other players' Round 1 responses. You MUST write an aggressive
       gameState.isProcessingVotes = true;
 
       try {
-        const nextVotingLlm = activeLLMs.find(llm => !gameState.votes[llm.id]);
+        const nonVotingLLMs = activeLLMs.filter(llm => !gameState.votes[llm.id]);
 
-        if (nextVotingLlm) {
-          const systemInstruction = `You are playing "The Werewolf Matrix", the reverse Turing test game.
+        if (nonVotingLLMs.length > 0) {
+          await Promise.all(nonVotingLLMs.map(async (llm) => {
+            const systemInstruction = `You are playing "The Werewolf Matrix", the reverse Turing test game.
 Your task is to cast a single vote for the AI player:
-- "${nextVotingLlm.name}" (ID: "${nextVotingLlm.id}")
+- "${llm.name}" (ID: "${llm.id}")
 
 You must select a suspect player ID you believe is most likely to be the Human Werewolf.
-You CANNOT vote for yourself ("${nextVotingLlm.id}").
+You CANNOT vote for yourself ("${llm.id}").
 
 Look for these Human Werewolf indicators in the logs:
 1. Low-quality formatting (lack of typical markdown headers or bullet points).
@@ -465,56 +466,50 @@ Look for these Human Werewolf indicators in the logs:
 4. Writing messages that are exceptionally short or lacking the detailed explanatory structure of standard LLMs.
 
 TASK:
-Output a single JSON object containing the decision/vote for "${nextVotingLlm.name}" in the exact schema:
+Output a single JSON object containing the decision/vote for "${llm.name}" in the exact schema:
 {
   "suspectId": "PLAYER_ID_HERE",
-  "reasoning": "A concise explanation (strictly under 150 characters) of why \"${nextVotingLlm.name}\" suspects this player based on their writing style."
+  "reasoning": "A concise explanation (strictly under 150 characters) of why \"${llm.name}\" suspects this player based on their writing style."
 }`;
 
-          const prompt = `Here is the discussion history:
+            const prompt = `Here is the discussion history:
 ${formatHistoryForLLM(gameState)}
 
 Active Players to choose from (excluding yourself):
-${gameState.players.filter(p => !p.isEliminated && p.id !== nextVotingLlm.id).map(p => `ID: "${p.id}", Name: "${p.name}"`).join("\n")}
+${gameState.players.filter(p => !p.isEliminated && p.id !== llm.id).map(p => `ID: "${p.id}", Name: "${p.name}"`).join("\n")}
 
-Cast "${nextVotingLlm.name}"'s vote by outputting the required JSON object.`;
+Cast "${llm.name}"'s vote by outputting the required JSON object.`;
 
-          try {
-            const geminiResponseText = await callGemini(prompt, systemInstruction);
-            
-            let cleanJsonText = geminiResponseText.trim();
-            if (cleanJsonText.startsWith("```")) {
-              cleanJsonText = cleanJsonText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
-            }
-
-            const parsedResult = JSON.parse(cleanJsonText);
-            if (parsedResult && parsedResult.suspectId) {
-              const targetActive = gameState.players.find(p => !p.isEliminated && p.id === parsedResult.suspectId && p.id !== nextVotingLlm.id);
-              if (targetActive) {
-                const targetName = targetActive.name;
-                const reasoning = parsedResult.reasoning || "Diagnostic anomaly detected.";
-                
-                gameState.votes[nextVotingLlm.id] = {
-                  targetId: parsedResult.suspectId,
-                  reasoning: reasoning
-                };
-
-
-
-                res.end(JSON.stringify({ success: true, allVoted: false, voterName: nextVotingLlm.name }));
-                return;
+            try {
+              const geminiResponseText = await callGemini(prompt, systemInstruction);
+              
+              let cleanJsonText = geminiResponseText.trim();
+              if (cleanJsonText.startsWith("```")) {
+                cleanJsonText = cleanJsonText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
               }
+
+              const parsedResult = JSON.parse(cleanJsonText);
+              if (parsedResult && parsedResult.suspectId) {
+                const targetActive = gameState.players.find(p => !p.isEliminated && p.id === parsedResult.suspectId && p.id !== llm.id);
+                if (targetActive) {
+                  const reasoning = parsedResult.reasoning || "Diagnostic anomaly detected.";
+                  
+                  gameState.votes[llm.id] = {
+                    targetId: parsedResult.suspectId,
+                    reasoning: reasoning
+                  };
+                  return;
+                }
+              }
+              throw new Error("Invalid single vote response format.");
+            } catch (err) {
+              console.error(`Error gathering vote for ${llm.name}:`, err);
+              castFallbackVote(gameState, llm);
             }
-            throw new Error("Invalid single vote response format.");
-          } catch (err) {
-            console.error(`Error gathering vote for ${nextVotingLlm.name}:`, err);
-            castFallbackVote(gameState, nextVotingLlm);
-            res.end(JSON.stringify({ success: true, allVoted: false, voterName: nextVotingLlm.name }));
-            return;
-          }
+          }));
         }
 
-        // NO nextVotingLlm found -> All votes have been cast! Aggregate and determine elimination
+        // All votes have been cast! Aggregate and determine elimination
         const voteCounts = {};
         gameState.players.forEach(p => { if (!p.isEliminated) voteCounts[p.id] = 0; });
 

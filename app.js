@@ -599,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 systemActionBanner.classList.remove('hidden');
                 if (systemBannerText) systemBannerText.textContent = `${activePlayer.name} is compiling response matrix...`;
               }
-              setTimeout(autoStepLlmTurn, 2500); // Wait 2.5 seconds to simulate reading/generation lag
+              setTimeout(autoStepLlmTurn, 400); // Wait 0.4 seconds to simulate reading/generation lag
             }
           } else {
             // Auto-step disabled: hide compiler banner so user can click manual step button
@@ -621,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Auto trigger LLM voting sequentially if not triggered yet
         if (!isRequestingStep) {
           isRequestingStep = true;
-          setTimeout(autoStepLlmVotes, 2000);
+          setTimeout(autoStepLlmVotes, 300); // Wait 0.3 seconds to simulate reading/generation lag
         }
       } else {
         // Human must vote

@@ -100,7 +100,7 @@
 <!-- TopAppBar -->
 <header class="fixed top-0 w-full z-50 bg-[#0c0e12]/80 border-b border-white/10 flex justify-between items-center px-margin-mobile h-12 md:px-margin-desktop backdrop-blur-md">
 <div class="flex items-center gap-4">
-<span class="text-xs font-bold tracking-[0.2em] uppercase terminal-glow-green flicker-animation text-neon-green">PROJECT_TURIN // KERNEL STATUS: INITIALIZING // ROUND 1<br></span>
+<span class="text-xs font-bold tracking-[0.2em] uppercase terminal-glow-green flicker-animation text-neon-green">PROJECT_TURIN // KERNEL STATUS: INITIALIZING // Round 1: REPONSE<br></span>
 </div>
 <div class="flex items-center gap-6">
 <button onclick="hardResetGame()" class="border border-red-500/50 hover:border-red-500 bg-red-500/10 hover:bg-red-500/30 text-red-500 px-3 py-1 text-xs font-bold uppercase tracking-widest transition-all active:translate-y-0.5 flex items-center gap-1.5 cursor-pointer z-50">
@@ -611,7 +611,13 @@ HARD_RESET
         }
 
         // Update the top-left status bar dynamically
-        const headerText = `PROJECT_TURIN // KERNEL STATUS: ${state.status} // ROUND ${state.round}`;
+        let roundSuffix = `ROUND ${state.round}`;
+        if (state.round === 1) {
+            roundSuffix = "Round 1: REPONSE";
+        } else if (state.round === 2) {
+            roundSuffix = "Round 2: DELIBERATION";
+        }
+        const headerText = `PROJECT_TURIN // KERNEL STATUS: ${state.status} // ${roundSuffix}`;
         const headerEl = document.querySelector('header span.terminal-glow-green');
         if (headerEl) {
             headerEl.textContent = headerText;

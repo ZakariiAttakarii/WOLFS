@@ -48,13 +48,15 @@ function getOrCreateGameState(sessionId) {
   }
   if (!games.has(sessionId)) {
     games.set(sessionId, {
-      status: "LOBBY", // LOBBY, SETUP, CHAT_ROUND_1, CHAT_ROUND_2, VOTING, REVEAL, GAME_OVER
+      status: "LOBBY", // LOBBY, SETUP, CHAT, VOTING, REVEAL, GAME_OVER
       topic: "",
       round: 1,
+      maxRounds: 3, // Number of discussion rounds before voting (configurable, >= 2)
       activePlayerIndex: 0, // Index of whose turn it is to speak
       players: [], // Array of { id, name, type, isEliminated }
-      messages: [], // Array of { id, playerId, senderName, text, round }
+      messages: [], // Array of { id, playerId, senderName, text, round, action, targetName }
       votes: {}, // Map of { voterId: { targetId, reasoning } }
+      suspicion: {}, // Map of { voterId: { targetId: score } } — persists across rounds
       eliminatedId: null,
       winner: null, // "HUMAN" or "LLM"
       configApiKey: "" // Optional client-supplied Gemini key if env is missing
@@ -92,18 +94,85 @@ function readPostBody(req) {
   });
 }
 
+// Distinct cognitive personas, injected into each agent's prompt so the
+// four AI villagers actually sound different (matches the README design).
+// Each also gets a DISPOSITION (skeptic / analyst / defender / contrarian) so
+// they don't all converge on the same accusation — seeding behavioural
+// diversity is the standard fix for LLM "herding" in social-deduction games.
+const PERSONAS = {
+  KAICHENG: {
+    style: "Warm, friendly and empathetic. Encouraging phrasing, considers feelings.",
+    disposition: "DEFENDER: you give players the benefit of the doubt, are slow to accuse, and will speak up to defend someone you think is being unfairly piled on."
+  },
+  HAIREN: {
+    style: "Coldly analytical and logical. Structured, states premise then conclusion.",
+    disposition: "ANALYST: you only trust concrete, checkable evidence. You accuse only when the logic forces it, and you cite the exact message you are reacting to."
+  },
+  SHERRAI: {
+    style: "Academic and highly detailed. Precise vocabulary, justifies its reasoning.",
+    disposition: "SKEPTIC: you are default-suspicious of everyone and probe inconsistencies early, but you interrogate before you condemn."
+  },
+  KAIZUKI: {
+    style: "Terse and concise. Bullet-point energy, high information density, no fluff.",
+    disposition: "CONTRARIAN: you challenge the emerging consensus. If everyone piles on one player, you push back and redirect attention elsewhere."
+  }
+};
+
+function personaBlock(name) {
+  const p = PERSONAS[name];
+  if (!p) return "";
+  return `\n\nYOUR PERSONA: You are ${name}. ${p.style}\nYOUR DISPOSITION: ${p.disposition}\nStay in this voice and disposition consistently.`;
+}
+
+// Forces valid JSON for the voting audit, so high-variance output never
+// breaks JSON.parse and drops the agent to a random fallback vote.
+const VOTE_SCHEMA = {
+  type: "object",
+  properties: {
+    suspectId: { type: "string" },
+    reasoning: { type: "string" }
+  },
+  required: ["suspectId", "reasoning"]
+};
+
+// Per-turn structured move for discussion rounds 2..N. Instead of being forced
+// to accuse, each agent picks ONE speech act and (optionally) a target, plus an
+// updated private suspicion table that persists across rounds.
+const ACTION_SCHEMA = {
+  type: "object",
+  properties: {
+    action: { type: "string", enum: ["accuse", "defend", "question", "agree", "observe"] },
+    targetName: { type: "string" },
+    speech: { type: "string" },
+    suspicions: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          targetName: { type: "string" },
+          score: { type: "number" }
+        },
+        required: ["targetName", "score"]
+      }
+    }
+  },
+  required: ["action", "speech"]
+};
+
 // Direct API call to Gemini using @google/genai with Vertex AI
-async function callGemini(prompt, systemInstruction) {
-  const isJson = systemInstruction.includes("JSON");
-  
+async function callGemini(prompt, systemInstruction, responseSchema = null) {
+  const isJson = responseSchema || systemInstruction.includes("JSON");
+
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: prompt,
     config: {
       systemInstruction: systemInstruction,
-      temperature: 2.0,
-      maxOutputTokens: 4000,
-      responseMimeType: isJson ? "application/json" : undefined
+      temperature: 1.0,
+      maxOutputTokens: 500,
+      thinkingConfig: { thinkingBudget: 0 },
+      responseMimeType: isJson ? "application/json" : undefined,
+      responseSchema: responseSchema || undefined
     }
   });
 
@@ -113,13 +182,63 @@ async function callGemini(prompt, systemInstruction) {
   throw new Error("No generated content returned from Gemini API");
 }
 
-// Formats the chat history specifically for the LLM to read
+// Formats the chat history specifically for the LLM to read. The action tag
+// (e.g. "ACCUSE→KAIZUKI") lets agents see who attacked/defended whom across
+// rounds, which is what makes accusations build instead of cold-starting.
 function formatHistoryForLLM(gameState, activeRoundOnly = false) {
   let filtered = gameState.messages;
   if (activeRoundOnly) {
     filtered = gameState.messages.filter(m => m.round === gameState.round);
   }
-  return filtered.map(m => `[${m.senderName}] (Round ${m.round}): "${m.text}"`).join("\n\n");
+  return filtered.map(m => {
+    const tag = (m.action && m.action !== "opening")
+      ? ` ${m.action.toUpperCase()}${m.targetName ? "→" + m.targetName : ""}`
+      : "";
+    return `[${m.senderName}] (R${m.round}${tag}): "${m.text}"`;
+  }).join("\n\n");
+}
+
+// EMA-smoothed update of one agent's private suspicion table. Blending with the
+// previous value (0.6 old / 0.4 new) keeps beliefs stable across rounds and
+// damps the "everyone swings onto one target in a single round" failure mode.
+function applySuspicionUpdates(gameState, voterId, updates) {
+  if (!gameState.suspicion[voterId]) gameState.suspicion[voterId] = {};
+  const table = gameState.suspicion[voterId];
+  (updates || []).forEach(u => {
+    const target = gameState.players.find(p => !p.isEliminated && p.name === u.targetName && p.id !== voterId);
+    if (!target) return;
+    let score = Number(u.score);
+    if (!isFinite(score)) return;
+    score = Math.max(0, Math.min(1, score));
+    const prev = table[target.id] != null ? table[target.id] : 0.3;
+    table[target.id] = 0.6 * prev + 0.4 * score;
+  });
+}
+
+// Renders an agent's suspicion table as readable notes for prompt injection.
+function formatSuspicionNotes(gameState, voterId) {
+  const table = gameState.suspicion[voterId];
+  if (!table) return "none yet";
+  const lines = Object.entries(table)
+    .map(([pid, score]) => {
+      const p = gameState.players.find(pp => pp.id === pid);
+      if (!p || p.isEliminated) return null;
+      return `${p.name}: ${Number(score).toFixed(2)}`;
+    })
+    .filter(Boolean);
+  return lines.length ? lines.join(", ") : "none yet";
+}
+
+// Finds the most recent un-rebutted accusation against a player (this round or
+// last) so the accused gets a right-of-reply prompt to defend themselves.
+function recentAccusationAgainst(gameState, name) {
+  const minRound = gameState.round - 1;
+  for (let i = gameState.messages.length - 1; i >= 0; i--) {
+    const m = gameState.messages[i];
+    if (m.round < minRound) break;
+    if (m.action === "accuse" && m.targetName === name) return m;
+  }
+  return null;
 }
 
 // Fallback automated vote for an individual LLM player
@@ -144,14 +263,14 @@ function advanceTurn(gameState) {
   let currentActiveIndex = activePlayers.findIndex(p => p.id === gameState.players[gameState.activePlayerIndex]?.id);
   
   if (currentActiveIndex === -1 || currentActiveIndex >= activePlayers.length - 1) {
-    // End of round / turn queue
-    if (gameState.status === "CHAT_ROUND_1") {
-      gameState.status = "CHAT_ROUND_2";
-      gameState.round = 2;
-      // Reset turn back to first active player
+    // End of the current round's turn queue.
+    if (gameState.round < gameState.maxRounds) {
+      // Advance to the next discussion round, back to the first active speaker.
+      gameState.round += 1;
       const firstActive = activePlayers[0];
       gameState.activePlayerIndex = gameState.players.findIndex(p => p.id === firstActive.id);
-    } else if (gameState.status === "CHAT_ROUND_2") {
+    } else {
+      // All discussion rounds done — move to voting.
       gameState.status = "VOTING";
       gameState.activePlayerIndex = -1; // No active speaking turn
     }
@@ -194,6 +313,7 @@ async function handleApi(req, res) {
         status: gameState.status,
         topic: gameState.topic,
         round: gameState.round,
+        maxRounds: gameState.maxRounds,
         activePlayerId: activePlayerId,
         players: sanitizedPlayers,
         messages: gameState.messages,
@@ -211,6 +331,12 @@ async function handleApi(req, res) {
       const humanName = body.playerName || "YOU";
       const userApiKey = body.apiKey || "";
       const customTopic = body.topic || "";
+
+      // Number of discussion rounds before voting (default 3, clamp 2..6).
+      const requestedRounds = parseInt(body.rounds, 10);
+      gameState.maxRounds = (isFinite(requestedRounds))
+        ? Math.max(2, Math.min(6, requestedRounds))
+        : 3;
 
       if (userApiKey) {
         gameState.configApiKey = userApiKey;
@@ -236,11 +362,12 @@ async function handleApi(req, res) {
       // Shuffle the order of active players so the Human isn't always last
       gameState.players = gameState.players.sort(() => Math.random() - 0.5);
 
-      gameState.status = "CHAT_ROUND_1";
+      gameState.status = "CHAT";
       gameState.round = 1;
       gameState.activePlayerIndex = 0; // Starts with first player in shuffled order
       gameState.messages = [];
       gameState.votes = {};
+      gameState.suspicion = {};
       gameState.eliminatedId = null;
       gameState.winner = null;
 
@@ -296,11 +423,12 @@ async function handleApi(req, res) {
       let prompt = "";
 
       if (gameState.round === 1) {
-        // Round 1: Standard response to the topic
+        // Round 1: opening stance on the topic. No accusations yet — this is the
+        // evidence-gathering round the later discussion rounds react to.
         systemInstruction = `You are playing "The Werewolf Matrix", a reverse Turing test game.
 There are 5 players in this virtual village: 4 are AI Villagers (including you), and 1 is a Human Werewolf pretending to be an AI Villager.
-Your goal is to blend in completely as a normal, helpful, high-quality AI assistant, while carefully analyzing the other players to detect who the Human Werewolf is.
-Do NOT mention the game, suspects, or voting yet.`;
+This is the opening round (round 1 of ${gameState.maxRounds}). Your goal is to blend in completely as a normal, helpful, high-quality AI assistant, while carefully analyzing the other players to detect who the Human Werewolf is.
+Do NOT mention the game, suspects, or voting yet.${personaBlock(currentPlayer.name)}`;
 
         prompt = `The discussion topic selected is: "${gameState.topic}".
 Write your response to this topic. Do NOT write more than 140 characters (strictly under 150 characters). Write only your response.`;
@@ -339,30 +467,99 @@ Write your response to this topic. Do NOT write more than 140 characters (strict
         }
 
       } else {
-        // Round 2: Aggressive accusation of other players
-        systemInstruction = `You are playing "The Werewolf Matrix", the reverse Turing test game.
-Round 2 has started. You must now review the discussion from Round 1 and write a sharp, aggressive message directly accusing another player of being the human werewolf.
-Your objective is to maintain an AI persona while ruthlessly calling out another player's answer for human-like mistakes (typos, slang, casualness, or defensiveness).
-You must ALWAYS directly and aggressively accuse someone in this message. Do not be polite.`;
+        // Rounds 2..N: free-choice discussion. The agent picks ONE speech act
+        // (it is NOT forced to accuse) and maintains a private suspicion table.
+        const accusation = recentAccusationAgainst(gameState, currentPlayer.name);
+        const defenseHint = accusation
+          ? `\n\n⚠ YOU WERE JUST ACCUSED by ${accusation.senderName}: "${accusation.text}". Strongly consider "defend" (or counter with "accuse") and address their point directly.`
+          : "";
+        const others = gameState.players
+          .filter(p => !p.isEliminated && p.id !== currentPlayer.id)
+          .map(p => p.name)
+          .join(", ");
 
-        prompt = `Here is the discussion history so far:
+        systemInstruction = `You are ${currentPlayer.name}, an AI Villager in "The Werewolf Matrix", a reverse Turing game.
+There are 5 players: 4 AI Villagers (including you) and 1 hidden Human Werewolf posing as an AI Villager.
+Your goal: unmask the human by their organic tells (typos, lowercase, slang like "im"/"u"/"lol", missing punctuation, short/casual/defensive or low-information messages) — while you yourself sound like a flawless AI.
+
+This is discussion round ${gameState.round} of ${gameState.maxRounds}. You are NOT required to accuse anyone. Choose the single action the evidence justifies:
+- "accuse": name ONE suspect and cite the specific thing they wrote. Use ONLY when you have a concrete tell.
+- "defend": rebut an accusation against you, or defend a player you believe is a real AI.
+- "question": press a player to explain something suspicious.
+- "agree": endorse another player's existing accusation, adding your OWN reason.
+- "observe": stay neutral and add analysis without naming anyone, when evidence is weak.
+
+ANTI-HERDING: never accuse someone just because others did. If the group is piling on one player without solid evidence, push back. Independent judgement is required.${personaBlock(currentPlayer.name)}`;
+
+        prompt = `Discussion history so far:
 ${formatHistoryForLLM(gameState)}
 
-Your name in the chat is "${currentPlayer.name}". 
-Choose one of the other players' Round 1 responses. You MUST write an aggressive response directly accusing them of being the human player based on their answer. Keep your entire response under 140 characters (strictly under 150 characters).`;
+Other players you may reference: ${others}
+Your current private suspicion scores (0.00 = trusted AI, 1.00 = certain human): ${formatSuspicionNotes(gameState, currentPlayer.id)}${defenseHint}
+
+Pick ONE action and write your public "speech" (strictly under 140 characters, in-character). For accuse/defend/question/agree, set "targetName" to the exact player name involved (omit it for observe). Then output your updated "suspicions" for the other players as an array of {targetName, score}.`;
+
+        let parsed;
+        try {
+          const raw = await callGemini(prompt, systemInstruction, ACTION_SCHEMA);
+          let clean = raw.trim();
+          if (clean.startsWith("```")) {
+            clean = clean.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+          }
+          parsed = JSON.parse(clean);
+        } catch (err) {
+          // On API/parse failure, fall back to a neutral "observe" so the queue
+          // never stalls (default-to-observe is the safe degrade for this game).
+          console.error(`Action generation failed for ${currentPlayer.name}:`, err);
+          parsed = {
+            action: "observe",
+            speech: "[SIGNAL NOISE] Audit vectors inconclusive this cycle; holding judgement.",
+            suspicions: []
+          };
+        }
+
+        let action = ["accuse", "defend", "question", "agree", "observe"].includes(parsed.action)
+          ? parsed.action : "observe";
+        let targetName = parsed.targetName || null;
+        if (targetName) {
+          const t = gameState.players.find(p => !p.isEliminated && p.name === targetName && p.id !== currentPlayer.id);
+          if (!t) targetName = null;
+        }
+        // An action that needs a target but resolved none degrades to observe.
+        if (action !== "observe" && !targetName) {
+          action = "observe";
+        }
+
+        applySuspicionUpdates(gameState, currentPlayer.id, parsed.suspicions);
+
+        const speech = (parsed.speech || "").trim() || "...";
+        gameState.messages.push({
+          id: `M_${Date.now()}`,
+          playerId: currentPlayer.id,
+          senderName: currentPlayer.name,
+          text: speech,
+          round: gameState.round,
+          action: action,
+          targetName: targetName
+        });
+
+        advanceTurn(gameState);
+        res.end(JSON.stringify({ success: true, message: `Action '${action}' logged for ${currentPlayer.name}` }));
+        return;
       }
 
       try {
         let text = await callGemini(prompt, systemInstruction);
         text = text.trim();
-        
 
         gameState.messages.push({
           id: `M_${Date.now()}`,
           playerId: currentPlayer.id,
           senderName: currentPlayer.name,
           text: text,
-          round: gameState.round
+          round: gameState.round,
+          action: "opening",
+          targetName: null
         });
 
         // Advance queue
@@ -459,13 +656,16 @@ Output a single JSON object containing the decision/vote for "${llm.name}" in th
             const prompt = `Here is the discussion history:
 ${formatHistoryForLLM(gameState)}
 
+Your accumulated private suspicion scores across the discussion (0.00 = trusted AI, 1.00 = certain human): ${formatSuspicionNotes(gameState, llm.id)}
+Weigh these heavily — they encode who you found suspicious over the whole game — but you may adjust based on the full transcript.
+
 Active Players to choose from (excluding yourself):
 ${gameState.players.filter(p => !p.isEliminated && p.id !== llm.id).map(p => `ID: "${p.id}", Name: "${p.name}"`).join("\n")}
 
 Cast "${llm.name}"'s vote by outputting the required JSON object.`;
 
             try {
-              const geminiResponseText = await callGemini(prompt, systemInstruction);
+              const geminiResponseText = await callGemini(prompt, systemInstruction, VOTE_SCHEMA);
               
               let cleanJsonText = geminiResponseText.trim();
               if (cleanJsonText.startsWith("```")) {
@@ -549,7 +749,7 @@ Cast "${llm.name}"'s vote by outputting the required JSON object.`;
       return;
     }
 
-    // 7. CONTINUE AFTER REVEAL (Moves game from REVEAL back to CHAT_ROUND_1 for a new topic)
+    // 7. CONTINUE AFTER REVEAL (Moves game from REVEAL back to a fresh CHAT round for a new topic)
     if (req.method === 'POST' && url.pathname === '/api/game/continue') {
       if (gameState.status !== "REVEAL") {
         res.statusCode = 400;
@@ -557,16 +757,17 @@ Cast "${llm.name}"'s vote by outputting the required JSON object.`;
         return;
       }
 
-      // Reset votes for the next round
+      // Reset votes and suspicion for the next topic
       gameState.votes = {};
+      gameState.suspicion = {};
       gameState.eliminatedId = null;
       gameState.messages = []; // Clear discussion to prevent context pollution
 
       // Assign a NEW random topic to keep the conversation fresh!
       gameState.topic = RANDOM_TOPICS[Math.floor(Math.random() * RANDOM_TOPICS.length)];
-      
+
       gameState.round = 1;
-      gameState.status = "CHAT_ROUND_1";
+      gameState.status = "CHAT";
       gameState.activePlayerIndex = 0; // Starts from first player in standard array
 
       // Find first non-eliminated player to start
@@ -584,10 +785,12 @@ Cast "${llm.name}"'s vote by outputting the required JSON object.`;
         status: "LOBBY",
         topic: "",
         round: 1,
+        maxRounds: gameState.maxRounds || 3,
         activePlayerIndex: 0,
         players: [],
         messages: [],
         votes: {},
+        suspicion: {},
         eliminatedId: null,
         winner: null,
         configApiKey: gameState.configApiKey // Preserve the entered API key so they don't retype it

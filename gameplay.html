@@ -199,7 +199,7 @@ HARD_RESET
 <div class="mt-8 pt-6 border-t border-white/5">
 <form id="chat-form" onsubmit="event.preventDefault(); submitQuery();" class="flex items-center gap-4 bg-surface-container-low px-4 py-3 border border-white/5 group transition-colors duration-300">
 <span id="chat-arrow" class="text-neon-green font-bold terminal-glow-green text-lg animate-pulse">&gt;</span>
-<input id="chat-input" maxlength="200" class="flex-1 bg-transparent border-none text-neon-green text-[14px] focus:ring-0 placeholder:text-neon-green/20 uppercase tracking-wider p-0 font-bold transition-colors duration-300" placeholder="INITIALIZE_QUERY_SEQUENCE..." type="text" autocomplete="off">
+<input id="chat-input" maxlength="200" class="flex-1 bg-transparent border-none text-neon-green text-[14px] focus:ring-0 placeholder:text-neon-green/20 tracking-wider p-0 font-bold transition-colors duration-300" placeholder="INITIALIZE_QUERY_SEQUENCE..." type="text" autocomplete="off">
 <div id="chat-cursor" class="w-1.5 h-5 bg-neon-green shadow-[0_0_8px_rgba(0,255,65,1)] transition-all duration-300"></div>
 </form>
 </div>
@@ -409,6 +409,34 @@ HARD_RESET
         }
     ];
 
+    // When a suspect refers to another suspect by name, color that name with
+    // the referenced suspect's color. The rest of the line stays the speaker's color.
+    function highlightNames(text, speaker) {
+        let result = text;
+        suspects.forEach(s => {
+            if (speaker && s.name === speaker.name) return; // keep own name in own color
+            const re = new RegExp('\\b(' + s.name + ')\\b', 'gi');
+            result = result.replace(re, `<span class="${s.colorClass}">$1</span>`);
+        });
+        return result;
+    }
+
+    // Renders a small colored tag for an AI player's discussion move
+    // (accuse / defend / question / agree / observe) + who it targets.
+    function actionBadge(msg) {
+        if (!msg.action || msg.action === 'opening') return '';
+        const styles = {
+            accuse:   'text-error border-error/50 bg-error/10',
+            defend:   'text-electric-blue border-electric-blue/50 bg-electric-blue/10',
+            question: 'text-amber border-amber/50 bg-amber/10',
+            agree:    'text-neon-green border-neon-green/50 bg-neon-green/10',
+            observe:  'text-white/50 border-white/20 bg-white/5'
+        };
+        const cls = styles[msg.action] || styles.observe;
+        const arrow = msg.targetName ? ` → ${msg.targetName}` : '';
+        return `<span class="ml-1 px-1.5 py-0.5 border rounded-sm text-[8px] font-black tracking-wider ${cls}">${msg.action.toUpperCase()}${arrow}</span>`;
+    }
+
     // Native Synth Audio System using Web Audio API
     function playSynthSound(type) {
         try {
@@ -538,31 +566,31 @@ HARD_RESET
                 // Kaicheng (Neon Green)
                 formEl.classList.add("focus-within:border-neon-green/50");
                 arrowEl.className = "text-neon-green font-bold terminal-glow-green text-lg animate-pulse";
-                inputEl.className = "flex-1 bg-transparent border-none text-neon-green text-[14px] focus:ring-0 placeholder:text-neon-green/20 uppercase tracking-wider p-0 font-bold transition-colors duration-300";
+                inputEl.className = "flex-1 bg-transparent border-none text-neon-green text-[14px] focus:ring-0 placeholder:text-neon-green/20 tracking-wider p-0 font-bold transition-colors duration-300";
                 cursorEl.className = "w-1.5 h-5 bg-neon-green shadow-[0_0_8px_rgba(0,255,65,1)] transition-all duration-300";
             } else if (index === 1) {
                 // Hairen (Electric Blue)
                 formEl.classList.add("focus-within:border-electric-blue/50");
                 arrowEl.className = "text-electric-blue font-bold terminal-glow-blue text-lg animate-pulse";
-                inputEl.className = "flex-1 bg-transparent border-none text-electric-blue text-[14px] focus:ring-0 placeholder:text-electric-blue/20 uppercase tracking-wider p-0 font-bold transition-colors duration-300";
+                inputEl.className = "flex-1 bg-transparent border-none text-electric-blue text-[14px] focus:ring-0 placeholder:text-electric-blue/20 tracking-wider p-0 font-bold transition-colors duration-300";
                 cursorEl.className = "w-1.5 h-5 bg-electric-blue shadow-[0_0_8px_rgba(0,209,255,1)] transition-all duration-300";
             } else if (index === 2) {
                 // Sherrai (Hot Pink)
                 formEl.classList.add("focus-within:border-hot-pink/50");
                 arrowEl.className = "text-hot-pink font-bold terminal-glow-pink text-lg animate-pulse";
-                inputEl.className = "flex-1 bg-transparent border-none text-hot-pink text-[14px] focus:ring-0 placeholder:text-hot-pink/20 uppercase tracking-wider p-0 font-bold transition-colors duration-300";
+                inputEl.className = "flex-1 bg-transparent border-none text-hot-pink text-[14px] focus:ring-0 placeholder:text-hot-pink/20 tracking-wider p-0 font-bold transition-colors duration-300";
                 cursorEl.className = "w-1.5 h-5 bg-hot-pink shadow-[0_0_8px_rgba(255,0,122,1)] transition-all duration-300";
             } else if (index === 3) {
                 // Kaizuki (Amber)
                 formEl.classList.add("focus-within:border-amber/50");
                 arrowEl.className = "text-amber font-bold terminal-glow-amber text-lg animate-pulse";
-                inputEl.className = "flex-1 bg-transparent border-none text-amber text-[14px] focus:ring-0 placeholder:text-amber/20 uppercase tracking-wider p-0 font-bold transition-colors duration-300";
+                inputEl.className = "flex-1 bg-transparent border-none text-amber text-[14px] focus:ring-0 placeholder:text-amber/20 tracking-wider p-0 font-bold transition-colors duration-300";
                 cursorEl.className = "w-1.5 h-5 bg-amber shadow-[0_0_8px_rgba(255,184,0,1)] transition-all duration-300";
             } else if (index === -1) {
                 // Operator (White / Gray neutral glow)
                 formEl.classList.add("focus-within:border-white/30");
                 arrowEl.className = "text-white font-bold text-lg animate-pulse";
-                inputEl.className = "flex-1 bg-transparent border-none text-white text-[14px] focus:ring-0 placeholder:text-white/20 uppercase tracking-wider p-0 font-bold transition-colors duration-300";
+                inputEl.className = "flex-1 bg-transparent border-none text-white text-[14px] focus:ring-0 placeholder:text-white/20 tracking-wider p-0 font-bold transition-colors duration-300";
                 cursorEl.className = "w-1.5 h-5 bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all duration-300";
             }
         }
@@ -611,11 +639,12 @@ HARD_RESET
         }
 
         // Update the top-left status bar dynamically
-        let roundSuffix = `ROUND ${state.round}`;
+        const maxRounds = state.maxRounds || 3;
+        let roundSuffix = `ROUND ${state.round}/${maxRounds}`;
         if (state.round === 1) {
-            roundSuffix = "ROUND 1: RESPONSE";
-        } else if (state.round === 2) {
-            roundSuffix = "ROUND 2: DELIBERATION";
+            roundSuffix = `ROUND 1/${maxRounds}: RESPONSE`;
+        } else {
+            roundSuffix = `ROUND ${state.round}/${maxRounds}: DELIBERATION`;
         }
         const headerText = `PROJECT_TURIN // KERNEL STATUS: ${state.status} // ${roundSuffix}`;
         const headerEl = document.querySelector('header span.terminal-glow-green');
@@ -707,23 +736,23 @@ HARD_RESET
                 const isLlm = playerInState ? playerInState.type === "LLM" : true;
                 
                 const msgDiv = document.createElement('div');
-                msgDiv.className = 'space-y-2 max-w-3xl mb-6';
+                msgDiv.className = 'space-y-2 max-w-full mb-6';
                 
                 if (isLlm) {
                     const suspect = suspects.find(s => s.name === msg.senderName);
                     if (suspect) {
                         msgDiv.innerHTML = `
                             <div class="flex items-center gap-2 ${suspect.colorClass} text-[11px] font-bold tracking-widest uppercase">
-                                <span class="material-symbols-outlined text-[14px]">${suspect.icon}</span> ${suspect.name}
+                                <span class="material-symbols-outlined text-[14px]">${suspect.icon}</span> ${suspect.name} ${actionBadge(msg)}
                             </div>
                             <div class="pl-4 border-l-2 ${suspect.borderColorClass} ${suspect.colorClass} ${suspect.glowClass} leading-relaxed text-[13px]">
-                                ${msg.text}
+                                ${highlightNames(msg.text, suspect)}
                             </div>
                         `;
                     } else {
                         msgDiv.innerHTML = `
                             <div class="flex items-center gap-2 text-primary text-[11px] font-bold tracking-widest uppercase">
-                                <span class="material-symbols-outlined text-[14px]">smart_toy</span> ${msg.senderName}
+                                <span class="material-symbols-outlined text-[14px]">smart_toy</span> ${msg.senderName} ${actionBadge(msg)}
                             </div>
                             <div class="pl-4 border-l-2 border-primary text-primary leading-relaxed text-[13px]">
                                 ${msg.text}
@@ -733,7 +762,7 @@ HARD_RESET
                 } else {
                     msgDiv.innerHTML = `
                         <div class="text-white/40 text-[11px] font-bold tracking-widest uppercase">OPERATOR [${msg.senderName}]</div>
-                        <div class="pl-4 border-l-2 border-white/20 text-white/80 leading-relaxed uppercase text-[13px]">
+                        <div class="pl-4 border-l-2 border-white/20 text-white/80 leading-relaxed text-[13px]">
                             ${msg.text}
                         </div>
                     `;
@@ -750,7 +779,7 @@ HARD_RESET
         let preserveTyping = false;
         
         let activeLlmId = null;
-        if (state.status === "CHAT_ROUND_1" || state.status === "CHAT_ROUND_2") {
+        if (state.status === "CHAT") {
             const activePlayer = state.players.find(p => p.id === state.activePlayerId);
             if (activePlayer && activePlayer.type !== "HUMAN") {
                 activeLlmId = activePlayer.id;
@@ -779,8 +808,8 @@ HARD_RESET
 
         // 3. Update Input, Blinker state and handle Auto-Stepping
         const inputEl = document.getElementById('chat-input');
-        
-        if (state.status === "CHAT_ROUND_1" || state.status === "CHAT_ROUND_2") {
+
+        if (state.status === "CHAT") {
             const activePlayer = state.players.find(p => p.id === state.activePlayerId);
             if (activePlayer) {
                 if (activePlayer.type === "HUMAN") {
@@ -805,7 +834,7 @@ HARD_RESET
                         const typingDiv = document.createElement('div');
                         typingDiv.id = 'typing-indicator';
                         typingDiv.setAttribute('data-player-id', activePlayer.id);
-                        typingDiv.className = 'space-y-2 max-w-3xl mb-6';
+                        typingDiv.className = 'space-y-2 max-w-full mb-6';
                         typingDiv.innerHTML = `
                             <div class="flex items-center gap-2 ${suspect.colorClass} text-[11px] font-bold tracking-widest uppercase animate-pulse">
                                 <span class="material-symbols-outlined text-[14px] animate-spin">${suspect.icon}</span> ${suspect.name}
@@ -889,7 +918,7 @@ HARD_RESET
                         const typingDiv = document.createElement('div');
                         typingDiv.id = 'typing-indicator';
                         typingDiv.setAttribute('data-player-id', nextVotingLlm.id);
-                        typingDiv.className = 'space-y-2 max-w-3xl mb-6';
+                        typingDiv.className = 'space-y-2 max-w-full mb-6';
                         typingDiv.innerHTML = `
                             <div class="flex items-center gap-2 ${suspect.colorClass} text-[11px] font-bold tracking-widest uppercase animate-pulse">
                                 <span class="material-symbols-outlined text-[14px] animate-spin">${suspect.icon}</span> ${suspect.name}

@@ -323,17 +323,17 @@ Do NOT mention the game, suspects, or voting yet.`;
 Write your response to this topic. Do NOT write more than 140 characters (strictly under 150 characters). Write only your response.`;
 
       } else {
-        // Round 2: Critique, respond to, or accuse previous player statements
+        // Round 2: Aggressive accusation of other players
         systemInstruction = `You are playing "The Werewolf Matrix", the reverse Turing test game.
-Round 2 has started. You must now review the discussion from Round 1 and write a brief comment, response, or critique addressing another player's answer.
-Your objective is to sound like a helpful, high-quality AI, but you should also actively look for human-like mistakes (typos, informal slang, lack of structure, defensiveness, or being overly casual). 
-You are encouraged to directly or subtly accuse or question anyone you suspect of being the human werewolf in this chat message.`;
+Round 2 has started. You must now review the discussion from Round 1 and write a sharp, aggressive message directly accusing another player of being the human werewolf.
+Your objective is to maintain an AI persona while ruthlessly calling out another player's answer for human-like mistakes (typos, slang, casualness, or defensiveness).
+You must ALWAYS directly and aggressively accuse someone in this message. Do not be polite.`;
 
         prompt = `Here is the discussion history so far:
 ${formatHistoryForLLM(gameState)}
 
 Your name in the chat is "${currentPlayer.name}". 
-Choose one of the other players' Round 1 responses. Comment on it, critique it, or directly accuse/question them if you suspect they are the human player. Keep your entire response under 140 characters (strictly under 150 characters).`;
+Choose one of the other players' Round 1 responses. You MUST write an aggressive response directly accusing them of being the human player based on their answer. Keep your entire response under 140 characters (strictly under 150 characters).`;
       }
 
       try {

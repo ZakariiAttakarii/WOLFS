@@ -3,8 +3,12 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /usr/src/app
 
+# Install dependencies first (leverages Docker cache layer)
+COPY package.json package-lock.json* ./
+RUN npm install --production
+
 # Copy application files
-COPY package.json server.js index.html gameplay.html tutorial.html result.html style.css app.js ./
+COPY server.js index.html gameplay.html tutorial.html result.html style.css app.js ./
 COPY art ./art/
 
 # Expose default port

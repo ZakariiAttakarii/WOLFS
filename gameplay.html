@@ -116,69 +116,80 @@ HARD_RESET
 <!-- Main Content Area -->
 <main class="flex-1 mt-12 pb-20 md:pb-0 flex flex-col overflow-hidden relative z-10">
 <section class="flex-1 p-4 md:p-8 grid grid-cols-[auto_1fr] gap-6 max-w-full mx-auto w-full h-full overflow-hidden">
-<div class="flex flex-col w-48 custom-scrollbar gap-1" id="subject-sidebar">
+<div class="flex flex-col w-48 custom-scrollbar gap-2 pt-12 pb-16 h-full justify-start" id="subject-sidebar">
 <!-- Active Suspect: Subject 01 -->
-<div id="card-subject-01" onclick="setActiveSpeaker(0)" class="group relative bg-surface-container-low border-[4px] border-neon-green shadow-[0_0_15px_rgba(0,255,65,0.3)] transition-all cursor-pointer w-full">
-<div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
-<div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle,rgba(0,255,65,0.4)_1px,transparent_1px)] bg-[size:8px_8px]"></div>
-<span id="icon-subject-01" class="material-symbols-outlined text-4xl text-neon-green terminal-glow-green">change_history</span>
-<div id="card-overlay-subject-01" class="absolute top-2 right-2 hidden text-[8px] font-black uppercase px-1.5 py-0.5 border text-neon-green border-neon-green bg-neon-green/10 z-10 animate-pulse">THINKING</div>
-<div class="absolute top-2 left-2 border border-neon-green/30 px-1 py-0.5 text-[8px] bg-black text-neon-green">PROBE: 98%</div>
+<div id="card-subject-01" onclick="setActiveSpeaker(0)" class="group relative bg-surface-container-low border-[4px] border-neon-green shadow-[0_0_15px_rgba(0,255,65,0.3)] transition-all cursor-pointer w-full h-40">
+<div class="absolute inset-0 z-0 opacity-50" style="background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuBviQZnnRHCpWS2wNnEwI_AYUHd6HXThKh5whYNS-fk4gAwHSH2oX0vjHdlHSnMnDk3QoaNKyZK73U0tXpBdhJ-VuyaYNcMmV0QYfE7fdirXtbF3u4ho3V1QJJ7p6H4elhu0LfFlAAzvdbQ5MgR1N_xt_euczxDpY3LIQtjba9XFxQEhRvuvtc5Qn4yOCSMTBvZvlLs5fD4JzIVmAD2p4jt3Mba0CNEUHGPHu5ewQ9420_sZgrS0qKtAVPMrRZX-a83TiWn1WbOZK8&quot;); background-size: cover; background-position: center center;"></div>
+<div id="card-overlay-subject-01" class="absolute inset-0 hidden bg-black/60 backdrop-blur-sm z-20 flex items-center justify-center text-[10px] font-black uppercase border border-neon-green text-neon-green animate-pulse">THINKING</div>
+<div class="relative flex flex-col h-full z-10">
+<div class="flex justify-end p-2">
+<div class="flex flex-col items-end gap-1">
+<span id="icon-subject-01" class="material-symbols-outlined text-2xl text-neon-green terminal-glow-green">change_history</span>
+<div class="border border-neon-green/30 px-1 py-0.5 text-[8px] bg-black text-neon-green">PROBE: 98%</div>
+<button onclick="voteForSubject(0); event.stopPropagation();" class="border border-neon-green/30 text-neon-green/60 bg-neon-green/5 hover:bg-neon-green hover:text-black hover:border-neon-green transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer mt-1">VOTE</button>
 </div>
-<div id="footer-subject-01" class="px-3 py-1 border-t border-neon-green/20 bg-neon-green/5 flex flex-col gap-1">
-<div class="flex items-center justify-between w-full">
-<div class="text-[8px] text-neon-green/60 leading-none">LLM_01</div>
-<button onclick="voteForSubject(0); event.stopPropagation();" class="border border-neon-green/30 text-neon-green/60 bg-neon-green/5 hover:bg-neon-green hover:text-black hover:border-neon-green transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer">VOTE</button>
 </div>
-<div id="label-subject-01" class="text-[11px] font-bold text-neon-green terminal-glow-green">KAICHENG</div>
+<div id="footer-subject-01" class="mt-auto flex flex-col items-end px-3 py-2 bg-black/40 backdrop-blur-sm border-t border-neon-green/20">
+<div class="text-[8px] text-neon-green/60 leading-none uppercase">KAICHENG</div>
+<div id="label-subject-01" class="text-[11px] font-bold text-neon-green terminal-glow-green">SUBJECT_01</div>
+</div>
 </div>
 </div>
 
 <!-- Inactive Suspect: Subject 02 -->
-<div id="card-subject-02" onclick="setActiveSpeaker(1)" class="group relative bg-surface-container-low border border-electric-blue/20 opacity-50 hover:opacity-70 transition-all cursor-pointer w-full">
-<div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
-<span id="icon-subject-02" class="material-symbols-outlined text-4xl text-electric-blue/40">square</span>
-<div id="card-overlay-subject-02" class="absolute top-2 right-2 hidden text-[8px] font-black uppercase px-1.5 py-0.5 border text-electric-blue border-electric-blue bg-electric-blue/10 z-10 animate-pulse">THINKING</div>
-<div class="absolute top-2 left-2 border border-white/10 px-1 py-0.5 text-[8px] bg-black text-white/40">PROBE: 12%</div>
+<div id="card-subject-02" onclick="setActiveSpeaker(1)" class="group relative bg-surface-container-low border border-electric-blue/20 opacity-50 hover:opacity-70 transition-all cursor-pointer w-full h-40">
+<div class="absolute inset-0 z-0 opacity-50" style="background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuC7OgfgiWOTef45xvGC5tdIlbem6GQrL27GyKS_99gttRaSeqBd1B78bWkglQlD0Um7i1MLoSDgp1fOYXubgZjnNuJpMTLt3tUm38MaRGMuC2RUbiMo5t6jD-vvw5A3dlUNaTOKsJeCqXed_xCGH8nkXWKKEfqnNiSplm2jzoOVSLqVmzwUcf4S3sHCpGU9cqUOX5pImKOPlGBnChG41YYX9tA8KSLYtFIoBdrGellSwJjH-H30uomkiAqlOouYInjjiBnNv_5xqkw&quot;); background-size: cover; background-position: center center;"></div>
+<div id="card-overlay-subject-02" class="absolute inset-0 hidden bg-black/60 backdrop-blur-sm z-20 flex items-center justify-center text-[10px] font-black uppercase border border-electric-blue text-electric-blue animate-pulse">THINKING</div>
+<div class="relative flex flex-col h-full z-10">
+<div class="flex justify-end p-2">
+<div class="flex flex-col items-end gap-1">
+<span id="icon-subject-02" class="material-symbols-outlined text-2xl text-electric-blue/40">square</span>
+<div class="border border-white/10 px-1 py-0.5 text-[8px] bg-black text-white/40">PROBE: 12%</div>
+<button onclick="voteForSubject(1); event.stopPropagation();" class="border border-electric-blue/30 text-electric-blue/60 bg-electric-blue/5 hover:bg-electric-blue hover:text-black hover:border-electric-blue transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer mt-1">VOTE</button>
 </div>
-<div id="footer-subject-02" class="px-3 py-1 border-t border-white/5 flex flex-col gap-1">
-<div class="flex items-center justify-between w-full">
-<div class="text-[8px] text-white/30 leading-none">LLM_02</div>
-<button onclick="voteForSubject(1); event.stopPropagation();" class="border border-electric-blue/30 text-electric-blue/60 bg-electric-blue/5 hover:bg-electric-blue hover:text-black hover:border-electric-blue transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer">VOTE</button>
 </div>
-<div id="label-subject-02" class="text-[11px] font-bold text-electric-blue/60">HAIREN</div>
+<div id="footer-subject-02" class="mt-auto flex flex-col items-end px-3 py-2 bg-black/40 backdrop-blur-sm border-t border-white/5">
+<div class="text-[8px] text-white/30 leading-none uppercase">HAIREN</div>
+<div id="label-subject-02" class="text-[11px] font-bold text-electric-blue/60">SUBJECT_02</div>
+</div>
 </div>
 </div>
 
 <!-- Inactive Suspect: Subject 03 -->
-<div id="card-subject-03" onclick="setActiveSpeaker(2)" class="group relative bg-surface-container-low border border-hot-pink/20 opacity-50 hover:opacity-70 transition-all cursor-pointer w-full">
-<div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
-<span id="icon-subject-03" class="material-symbols-outlined text-4xl text-hot-pink/40">diamond</span>
-<div id="card-overlay-subject-03" class="absolute top-2 right-2 hidden text-[8px] font-black uppercase px-1.5 py-0.5 border text-hot-pink border-hot-pink bg-hot-pink/10 z-10 animate-pulse">THINKING</div>
-<div class="absolute top-2 left-2 border border-white/10 px-1 py-0.5 text-[8px] bg-black text-white/40">PROBE: ??%</div>
+<div id="card-subject-03" onclick="setActiveSpeaker(2)" class="group relative bg-surface-container-low border border-hot-pink/20 opacity-50 hover:opacity-70 transition-all cursor-pointer w-full h-40">
+<div class="absolute inset-0 z-0 opacity-50" style="background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuCHsJy3tG0Eo-DFvT5ZTVmKeOWLI90N1fcs5j_TG_vE3gj0omR4oZ804ia04PtHzl8mMO5YjzQxL-s39VXMsAb0A85QJjdqqjkyasxhQhqK_0z365a0UwECEPnuoFa3aW1esEZkA52H9AlCw8DBN8Hrdnpt-kVuh3u0ni3bLMhzt9oXymCBhV7MMNZtJ7mM0oy86pNFw9RobKantfDhz6ObCrGnLezjraHs2CMsqTQk3Sr-Tnl62MiFZiQGpg4mRGFym6klWFLwRlQ&quot;); background-size: cover; background-position: center center;"></div>
+<div id="card-overlay-subject-03" class="absolute inset-0 hidden bg-black/60 backdrop-blur-sm z-20 flex items-center justify-center text-[10px] font-black uppercase border border-hot-pink text-hot-pink animate-pulse">THINKING</div>
+<div class="relative flex flex-col h-full z-10">
+<div class="flex justify-end p-2">
+<div class="flex flex-col items-end gap-1">
+<span id="icon-subject-03" class="material-symbols-outlined text-2xl text-hot-pink/40">diamond</span>
+<div class="border border-white/10 px-1 py-0.5 text-[8px] bg-black text-white/40">PROBE: ??%</div>
+<button onclick="voteForSubject(2); event.stopPropagation();" class="border border-hot-pink/30 text-hot-pink/60 bg-hot-pink/5 hover:bg-hot-pink hover:text-black hover:border-hot-pink transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer mt-1">VOTE</button>
 </div>
-<div id="footer-subject-03" class="px-3 py-1 border-t border-white/5 flex flex-col gap-1">
-<div class="flex items-center justify-between w-full">
-<div class="text-[8px] text-white/30 leading-none">LLM_03</div>
-<button onclick="voteForSubject(2); event.stopPropagation();" class="border border-hot-pink/30 text-hot-pink/60 bg-hot-pink/5 hover:bg-hot-pink hover:text-black hover:border-hot-pink transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer">VOTE</button>
 </div>
-<div id="label-subject-03" class="text-[11px] font-bold text-hot-pink/60">SHERRAI</div>
+<div id="footer-subject-03" class="mt-auto flex flex-col items-end px-3 py-2 bg-black/40 backdrop-blur-sm border-t border-white/5">
+<div class="text-[8px] text-white/30 leading-none uppercase">SHERRAI</div>
+<div id="label-subject-03" class="text-[11px] font-bold text-hot-pink/60">SUBJECT_03</div>
+</div>
 </div>
 </div>
 
 <!-- Inactive Suspect: Subject 04 -->
-<div id="card-subject-04" onclick="setActiveSpeaker(3)" class="group relative bg-surface-container-low border border-amber/20 opacity-50 hover:opacity-70 transition-all cursor-pointer w-full">
-<div class="aspect-square relative flex flex-col items-center justify-center overflow-hidden">
-<span id="icon-subject-04" class="material-symbols-outlined text-4xl text-amber/40">hexagon</span>
-<div id="card-overlay-subject-04" class="absolute top-2 right-2 hidden text-[8px] font-black uppercase px-1.5 py-0.5 border text-amber border-amber bg-amber/10 z-10 animate-pulse">THINKING</div>
-<div class="absolute top-2 left-2 border border-white/10 px-1 py-0.5 text-[8px] bg-black text-white/40">PROBE: 45%</div>
+<div id="card-subject-04" onclick="setActiveSpeaker(3)" class="group relative bg-surface-container-low border border-amber/20 opacity-50 hover:opacity-70 transition-all cursor-pointer w-full h-40">
+<div class="absolute inset-0 z-0 opacity-50" style="background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuCSW8R6TEE-L72XWVKXl-wf50dDH-9blEYgYrWRkdlGPcHCY0_Z1N0Rkq-W3wa0Z4Q-wzc8_vNLn0QyLbDEdeU7b0xoNWA9ydSy4CmDaI_f98wAyIVYZ5eUdkpJVtebRh3biv-_xNoWPQZWuEWBXuFz-F9v_yzd-_xMSagnkFcxiP8t7oKhFyGOrsI4r-TyXJTvASYJlGU78-MmDl_2UbxWJ9ob6v37Q71LD2QB86L7JdVIoWWxhzoDvzUIfk-Jobx8KQb1LVM1pp0&quot;); background-size: cover; background-position: center center;"></div>
+<div id="card-overlay-subject-04" class="absolute inset-0 hidden bg-black/60 backdrop-blur-sm z-20 flex items-center justify-center text-[10px] font-black uppercase border border-amber text-amber animate-pulse">THINKING</div>
+<div class="relative flex flex-col h-full z-10">
+<div class="flex justify-end p-2">
+<div class="flex flex-col items-end gap-1">
+<span id="icon-subject-04" class="material-symbols-outlined text-2xl text-amber/40">hexagon</span>
+<div class="border border-white/10 px-1 py-0.5 text-[8px] bg-black text-white/40">PROBE: 45%</div>
+<button onclick="voteForSubject(3); event.stopPropagation();" class="border border-amber/30 text-amber/60 bg-amber/5 hover:bg-amber hover:text-black hover:border-amber transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer mt-1">VOTE</button>
 </div>
-<div id="footer-subject-04" class="px-3 py-1 border-t border-white/5 flex flex-col gap-1">
-<div class="flex items-center justify-between w-full">
-<div class="text-[8px] text-white/30 leading-none">LLM_04</div>
-<button onclick="voteForSubject(3); event.stopPropagation();" class="border border-amber/30 text-amber/60 bg-amber/5 hover:bg-amber hover:text-black hover:border-amber transition-all rounded-sm px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-pointer">VOTE</button>
 </div>
-<div id="label-subject-04" class="text-[11px] font-bold text-amber/60">KAIZUKI</div>
+<div id="footer-subject-04" class="mt-auto flex flex-col items-end px-3 py-2 bg-black/40 backdrop-blur-sm border-t border-white/5">
+<div class="text-[8px] text-white/30 leading-none uppercase">KAIZUKI</div>
+<div id="label-subject-04" class="text-[11px] font-bold text-amber/60">SUBJECT_04</div>
+</div>
 </div>
 </div>
 </div>

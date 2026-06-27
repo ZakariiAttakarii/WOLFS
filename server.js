@@ -173,6 +173,13 @@ async function handleApi(req, res) {
       // Find the active player ID
       const activePlayerId = gameState.players[gameState.activePlayerIndex]?.id || null;
 
+      const humanPlayer = gameState.players.find(p => p.type === "HUMAN");
+      const clientVotes = (gameState.status === "REVEAL" || gameState.status === "GAME_OVER")
+        ? gameState.votes
+        : (gameState.status === "VOTING" && humanPlayer && gameState.votes[humanPlayer.id]
+           ? { [humanPlayer.id]: gameState.votes[humanPlayer.id] }
+           : {});
+
       res.end(JSON.stringify({
         status: gameState.status,
         topic: gameState.topic,
@@ -183,7 +190,7 @@ async function handleApi(req, res) {
         eliminatedId: gameState.eliminatedId,
         winner: gameState.winner,
         hasApiKey: true,
-        votes: gameState.status === "REVEAL" || gameState.status === "GAME_OVER" ? gameState.votes : {}
+        votes: clientVotes
       }));
       return;
     }
@@ -333,6 +340,12 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
 
     // 5. HUMAN SUBMITS VOTE
     if (req.method === 'POST' && url.pathname === '/api/game/submit-vote') {
+      if (gameState.status !== "VOTING") {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Voting phase is not active." }));
+        return;
+      }
+
       const body = await readPostBody(req);
       const targetId = body.targetId;
       const reasoning = body.reasoning || "No explanation provided.";
@@ -355,6 +368,18 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
 
     // 6. PROCESS LLM VOTES (Runs all LLM votes in a single batch API call and reveals the outcome)
     if (req.method === 'POST' && url.pathname === '/api/game/step-llm-votes') {
+      if (gameState.status !== "VOTING") {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: "Voting phase is not active." }));
+        return;
+      }
+
+      if (gameState.isProcessingVotes) {
+        res.statusCode = 409;
+        res.end(JSON.stringify({ error: "LLM votes are already being compiled." }));
+        return;
+      }
+
       const activeLLMs = gameState.players.filter(p => p.type === "LLM" && !p.isEliminated);
 
       // Check if human has voted first
@@ -365,10 +390,13 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
         return;
       }
 
-      const votingLLMs = activeLLMs.filter(llm => !gameState.votes[llm.id]);
+      gameState.isProcessingVotes = true;
 
-      if (votingLLMs.length > 0) {
-        const systemInstruction = `You are playing "The Werewolf Matrix", the reverse Turing test game.
+      try {
+        const votingLLMs = activeLLMs.filter(llm => !gameState.votes[llm.id]);
+
+        if (votingLLMs.length > 0) {
+          const systemInstruction = `You are playing "The Werewolf Matrix", the reverse Turing test game.
 Your task is to coordinate and cast votes simultaneously for all active AI players:
 ${votingLLMs.map(llm => `- "${llm.name}" (ID: "${llm.id}")`).join("\n")}
 
@@ -393,7 +421,7 @@ Output a single JSON object containing the decision/vote for each active AI play
   }
 }`;
 
-        const prompt = `Here is the discussion history:
+          const prompt = `Here is the discussion history:
 ${formatHistoryForLLM()}
 
 Active Players to choose from:
@@ -401,86 +429,93 @@ ${gameState.players.filter(p => !p.isEliminated).map(p => `ID: "${p.id}", Name: 
 
 Cast votes for all active AI players by outputting the required JSON object.`;
 
-        try {
-          const geminiResponseText = await callGemini(prompt, systemInstruction);
-          
-          let cleanJsonText = geminiResponseText.trim();
-          if (cleanJsonText.startsWith("```")) {
-            cleanJsonText = cleanJsonText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
-          }
+          try {
+            const geminiResponseText = await callGemini(prompt, systemInstruction);
+            
+            let cleanJsonText = geminiResponseText.trim();
+            if (cleanJsonText.startsWith("```")) {
+              cleanJsonText = cleanJsonText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+            }
 
-          const parsedResult = JSON.parse(cleanJsonText);
-          if (parsedResult && parsedResult.votes) {
-            votingLLMs.forEach(llm => {
-              const voteObj = parsedResult.votes[llm.id];
-              if (voteObj && voteObj.suspectId) {
-                // Ensure target is active and not themselves
-                const targetActive = gameState.players.find(p => !p.isEliminated && p.id === voteObj.suspectId && p.id !== llm.id);
-                if (targetActive) {
-                  gameState.votes[llm.id] = {
-                    targetId: voteObj.suspectId,
-                    reasoning: voteObj.reasoning || "Diagnostic consensus matching."
-                  };
-                  return;
+            const parsedResult = JSON.parse(cleanJsonText);
+            if (parsedResult && parsedResult.votes) {
+              votingLLMs.forEach(llm => {
+                const voteObj = parsedResult.votes[llm.id];
+                if (voteObj && voteObj.suspectId) {
+                  // Ensure target is active and not themselves
+                  const targetActive = gameState.players.find(p => !p.isEliminated && p.id === voteObj.suspectId && p.id !== llm.id);
+                  if (targetActive) {
+                    gameState.votes[llm.id] = {
+                      targetId: voteObj.suspectId,
+                      reasoning: voteObj.reasoning || "Diagnostic consensus matching."
+                    };
+                    return;
+                  }
                 }
-              }
-              castFallbackVote(llm);
-            });
-          } else {
-            throw new Error("Invalid batch votes response format.");
+                castFallbackVote(llm);
+              });
+            } else {
+              throw new Error("Invalid batch votes response format.");
+            }
+          } catch (err) {
+            console.error("Error gathering batch LLM votes:", err);
+            votingLLMs.forEach(llm => castFallbackVote(llm));
           }
-        } catch (err) {
-          console.error("Error gathering batch LLM votes:", err);
-          votingLLMs.forEach(llm => castFallbackVote(llm));
         }
-      }
 
-      // All votes have been cast! Aggregate and determine elimination
-      const voteCounts = {};
-      gameState.players.forEach(p => { if (!p.isEliminated) voteCounts[p.id] = 0; });
+        // All votes have been cast! Aggregate and determine elimination
+        const voteCounts = {};
+        gameState.players.forEach(p => { if (!p.isEliminated) voteCounts[p.id] = 0; });
 
-      Object.values(gameState.votes).forEach(v => {
-        if (voteCounts[v.targetId] !== undefined) {
-          voteCounts[v.targetId]++;
+        Object.values(gameState.votes).forEach(v => {
+          if (voteCounts[v.targetId] !== undefined) {
+            voteCounts[v.targetId]++;
+          }
+        });
+
+        // Find the maximum vote count
+        const highestVotes = Math.max(...Object.values(voteCounts));
+        
+        // Get all players that have this maximum vote count
+        const tiedIds = Object.entries(voteCounts)
+          .filter(([_, count]) => count === highestVotes)
+          .map(([pid]) => pid);
+
+        // Simple, fair tiebreaker: pick one of the tied players at random
+        const highestVotesId = tiedIds[Math.floor(Math.random() * tiedIds.length)];
+
+        // Eliminate player
+        const eliminatedPlayer = gameState.players.find(p => p.id === highestVotesId);
+        if (eliminatedPlayer) {
+          eliminatedPlayer.isEliminated = true;
+          gameState.eliminatedId = eliminatedPlayer.id;
         }
-      });
 
-      // Find the maximum vote count
-      const highestVotes = Math.max(...Object.values(voteCounts));
-      
-      // Get all players that have this maximum vote count
-      const tiedIds = Object.entries(voteCounts)
-        .filter(([_, count]) => count === highestVotes)
-        .map(([pid]) => pid);
+        // Check Win Conditions
+        const human = gameState.players.find(p => p.type === "HUMAN");
+        const activePlayers = gameState.players.filter(p => !p.isEliminated);
 
-      // Simple, fair tiebreaker: pick one of the tied players at random
-      const highestVotesId = tiedIds[Math.floor(Math.random() * tiedIds.length)];
+        if (human.isEliminated) {
+          // AI won! Human caught
+          gameState.status = "GAME_OVER";
+          gameState.winner = "LLM";
+        } else if (activePlayers.length <= 2) {
+          // Human survived to the final 2! Human wins!
+          gameState.status = "GAME_OVER";
+          gameState.winner = "HUMAN";
+        } else {
+          // Game continues to next round (Reset speaking variables for next debate session)
+          gameState.status = "REVEAL";
+        }
 
-      // Eliminate player
-      const eliminatedPlayer = gameState.players.find(p => p.id === highestVotesId);
-      if (eliminatedPlayer) {
-        eliminatedPlayer.isEliminated = true;
-        gameState.eliminatedId = eliminatedPlayer.id;
+        res.end(JSON.stringify({ success: true, eliminatedId: gameState.eliminatedId, status: gameState.status, winner: gameState.winner }));
+      } catch (err) {
+        console.error("Core error in step-llm-votes handler: ", err);
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: err.message || "Failed to process LLM votes" }));
+      } finally {
+        gameState.isProcessingVotes = false;
       }
-
-      // Check Win Conditions
-      const human = gameState.players.find(p => p.type === "HUMAN");
-      const activePlayers = gameState.players.filter(p => !p.isEliminated);
-
-      if (human.isEliminated) {
-        // AI won! Human caught
-        gameState.status = "GAME_OVER";
-        gameState.winner = "LLM";
-      } else if (activePlayers.length <= 2) {
-        // Human survived to the final 2! Human wins!
-        gameState.status = "GAME_OVER";
-        gameState.winner = "HUMAN";
-      } else {
-        // Game continues to next round (Reset speaking variables for next debate session)
-        gameState.status = "REVEAL";
-      }
-
-      res.end(JSON.stringify({ success: true, eliminatedId: gameState.eliminatedId, status: gameState.status, winner: gameState.winner }));
       return;
     }
 

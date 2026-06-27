@@ -105,7 +105,7 @@
 <div class="flex items-center gap-6">
 <div class="flex items-center gap-3">
 <span class="text-[9px] text-error uppercase tracking-widest flicker-animation">TIMEOUT_IN</span>
-<span class="text-sm font-bold tabular-nums text-error animate-pulse" id="countdown">02:28</span>
+<span class="text-sm font-bold tabular-nums text-error animate-pulse" id="countdown">02:00</span>
 </div>
 </div>
 </header>
@@ -205,7 +205,7 @@
 </nav>
 <script>
     // State management
-    let time = 180; // Start with 3 minutes
+    let time = 120; // Start with 2 minutes
     const display = document.getElementById('countdown');
     
     // Countdown Timer
@@ -900,6 +900,16 @@
         const suspect = suspects[index];
         const playerInState = currentGameState.players.find(p => p.name === suspect.name);
         if (!playerInState) return;
+
+        // Immediately disable all vote buttons on the UI to prevent double-clicks
+        const allButtons = document.querySelectorAll('button');
+        allButtons.forEach(btn => {
+            if (btn.textContent === 'VOTE' || btn.textContent === 'VOTING') {
+                btn.disabled = true;
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.3';
+            }
+        });
         
         const reasoning = "Suspicious behavioral latency mismatch.";
         
@@ -912,13 +922,20 @@
             const data = await res.json();
             if (data.success) {
                 playSynthSound('vote');
+                // Update local state immediately and update UI
+                if (!currentGameState.votes) currentGameState.votes = {};
+                currentGameState.votes[humanPlayer.id] = { targetId: playerInState.id, reasoning: reasoning };
+                updateUI(currentGameState);
+
                 // Cast all LLM votes and proceed
                 await stepLlmVotes();
             } else {
                 alert("Vote submission failed: " + data.error);
+                await fetchGameState(); // Sync and reset UI
             }
         } catch (err) {
             console.error("Error voting:", err);
+            await fetchGameState(); // Sync and reset UI
         }
     }
 

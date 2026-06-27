@@ -367,10 +367,6 @@ Choose one of the other players' Round 1 responses. You MUST write an aggressive
         let text = await callGemini(prompt, systemInstruction);
         text = text.trim();
         
-        // Safety guard to guarantee output is strictly under 150 characters
-        if (text.length >= 150) {
-          text = text.substring(0, 147) + "...";
-        }
 
         gameState.messages.push({
           id: `M_${Date.now()}`,

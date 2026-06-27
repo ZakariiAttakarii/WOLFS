@@ -118,6 +118,16 @@ function getActivePlayersList(excludeId) {
     .join("\n");
 }
 
+// Fallback automated vote for an individual LLM player
+function castFallbackVote(llm) {
+  const remainingTargets = gameState.players.filter(p => !p.isEliminated && p.id !== llm.id);
+  const fallbackTarget = remainingTargets[Math.floor(Math.random() * remainingTargets.length)];
+  gameState.votes[llm.id] = {
+    targetId: fallbackTarget ? fallbackTarget.id : llm.id,
+    reasoning: "[SYSTEM BACKUP] API call timed out or failed to parse. Casting automated diagnostic flag."
+  };
+}
+
 // Process the Turn Queue
 function advanceTurn() {
   const activePlayers = gameState.players.filter(p => !p.isEliminated);
@@ -337,7 +347,7 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
       return;
     }
 
-    // 6. PROCESS LLM VOTES (Runs all LLM votes in sequence and reveals the outcome)
+    // 6. PROCESS LLM VOTES (Runs all LLM votes in a single batch API call and reveals the outcome)
     if (req.method === 'POST' && url.pathname === '/api/game/step-llm-votes') {
       const activeLLMs = gameState.players.filter(p => p.type === "LLM" && !p.isEliminated);
 
@@ -349,61 +359,73 @@ Choose one of the other players' Round 1 responses and comment on it, critique i
         return;
       }
 
-      // Let each LLM analyze and cast a vote via Gemini
-      for (const llm of activeLLMs) {
-        // Skip if already voted
-        if (gameState.votes[llm.id]) continue;
+      const votingLLMs = activeLLMs.filter(llm => !gameState.votes[llm.id]);
 
+      if (votingLLMs.length > 0) {
         const systemInstruction = `You are playing "The Werewolf Matrix", the reverse Turing test game.
-Your name in the game is "${llm.name}" (ID: "${llm.id}").
-The discussion has finished. It is now the voting round. Your goal is to identify who the Human Werewolf is among the active players.
+Your task is to coordinate and cast votes simultaneously for all active AI players:
+${votingLLMs.map(llm => `- "${llm.name}" (ID: "${llm.id}")`).join("\n")}
 
-Look for these Human Werewolf indicators in the log:
+Each AI player must independently select a suspect player ID they believe is most likely to be the Human Werewolf.
+AI players CANNOT vote for themselves.
+
+Look for these Human Werewolf indicators in the logs:
 1. Low-quality formatting (lack of typical markdown headers or bullet points).
 2. Human-like conversational quirks (writing in lowercase, omitting punctuation, typos, slang like "im", "lol", "u").
 3. Making comments that sound defensive, overly casual, or non-technical.
 4. Writing messages that are exceptionally short or lacking the detailed explanatory structure of standard LLMs.
 
 TASK:
-Analyze the complete discussion history and select the single player ID that you believe is most likely to be the Human Werewolf player. 
-You MUST respond strictly in the following JSON format:
+Output a single JSON object containing the decision/vote for each active AI player in the following exact schema:
 {
-  "suspectId": "PLAYER_ID_HERE",
-  "reasoning": "A concise explanation of why you suspect this player based on their writing style."
+  "votes": {
+    "AI_PLAYER_ID_1": {
+      "suspectId": "PLAYER_ID_HERE",
+      "reasoning": "A concise explanation of why this AI suspects this player based on their writing style."
+    },
+    ...
+  }
 }`;
 
         const prompt = `Here is the discussion history:
 ${formatHistoryForLLM()}
 
 Active Players to choose from:
-${getActivePlayersList(llm.id)}
+${gameState.players.filter(p => !p.isEliminated).map(p => `ID: "${p.id}", Name: "${p.name}"`).join("\n")}
 
-Cast your vote by outputting the required JSON object.`;
+Cast votes for all active AI players by outputting the required JSON object.`;
 
         try {
           const geminiResponseText = await callGemini(prompt, systemInstruction);
           
-          // Parse JSON from Gemini output (stripping any markdown code fences if Gemini added them)
           let cleanJsonText = geminiResponseText.trim();
           if (cleanJsonText.startsWith("```")) {
             cleanJsonText = cleanJsonText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
           }
 
-          const parsedVote = JSON.parse(cleanJsonText);
-          
-          gameState.votes[llm.id] = {
-            targetId: parsedVote.suspectId,
-            reasoning: parsedVote.reasoning
-          };
+          const parsedResult = JSON.parse(cleanJsonText);
+          if (parsedResult && parsedResult.votes) {
+            votingLLMs.forEach(llm => {
+              const voteObj = parsedResult.votes[llm.id];
+              if (voteObj && voteObj.suspectId) {
+                // Ensure target is active and not themselves
+                const targetActive = gameState.players.find(p => !p.isEliminated && p.id === voteObj.suspectId && p.id !== llm.id);
+                if (targetActive) {
+                  gameState.votes[llm.id] = {
+                    targetId: voteObj.suspectId,
+                    reasoning: voteObj.reasoning || "Diagnostic consensus matching."
+                  };
+                  return;
+                }
+              }
+              castFallbackVote(llm);
+            });
+          } else {
+            throw new Error("Invalid batch votes response format.");
+          }
         } catch (err) {
-          console.error(`Error gathering vote for ${llm.name}:`, err);
-          // Backup fallback vote in case of API or JSON parsing failures
-          const remainingTargets = gameState.players.filter(p => !p.isEliminated && p.id !== llm.id);
-          const fallbackTarget = remainingTargets[Math.floor(Math.random() * remainingTargets.length)];
-          gameState.votes[llm.id] = {
-            targetId: fallbackTarget.id,
-            reasoning: "[SYSTEM BACKUP] API call timed out or failed to parse. Casting automated diagnostic flag."
-          };
+          console.error("Error gathering batch LLM votes:", err);
+          votingLLMs.forEach(llm => castFallbackVote(llm));
         }
       }
 
@@ -417,32 +439,16 @@ Cast your vote by outputting the required JSON object.`;
         }
       });
 
-      // Find the player with the highest vote count
-      let highestVotesId = null;
-      let highestVotes = -1;
-      let tie = false;
+      // Find the maximum vote count
+      const highestVotes = Math.max(...Object.values(voteCounts));
+      
+      // Get all players that have this maximum vote count
+      const tiedIds = Object.entries(voteCounts)
+        .filter(([_, count]) => count === highestVotes)
+        .map(([pid]) => pid);
 
-      Object.entries(voteCounts).forEach(([pid, count]) => {
-        if (count > highestVotes) {
-          highestVotes = count;
-          highestVotesId = pid;
-          tie = false;
-        } else if (count === highestVotes) {
-          tie = true;
-        }
-      });
-
-      // Handle a tie by picking the candidate with the tie or resolving randomly
-      if (tie) {
-        // Resolve tie: prioritize eliminating human if human is in the tie, otherwise pick first
-        const tiedIds = Object.entries(voteCounts).filter(([_, count]) => count === highestVotes).map(([pid]) => pid);
-        const humanPlayer = gameState.players.find(p => p.type === "HUMAN");
-        if (humanPlayer && tiedIds.includes(humanPlayer.id)) {
-          highestVotesId = humanPlayer.id;
-        } else {
-          highestVotesId = tiedIds[0];
-        }
-      }
+      // Simple, fair tiebreaker: pick one of the tied players at random
+      const highestVotesId = tiedIds[Math.floor(Math.random() * tiedIds.length)];
 
       // Eliminate player
       const eliminatedPlayer = gameState.players.find(p => p.id === highestVotesId);
@@ -454,7 +460,6 @@ Cast your vote by outputting the required JSON object.`;
       // Check Win Conditions
       const human = gameState.players.find(p => p.type === "HUMAN");
       const activePlayers = gameState.players.filter(p => !p.isEliminated);
-      const activeLLMsCount = activePlayers.filter(p => p.type === "LLM").length;
 
       if (human.isEliminated) {
         // AI won! Human caught

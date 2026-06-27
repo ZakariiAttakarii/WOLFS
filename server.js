@@ -596,7 +596,7 @@ Cast "${nextVotingLlm.name}"'s vote by outputting the required JSON object.`;
 
     // 8. RESET GAME STATE
     if (req.method === 'POST' && url.pathname === '/api/game/reset') {
-      gameState = {
+      games.set(sessionId, {
         status: "LOBBY",
         topic: "",
         round: 1,
@@ -607,7 +607,7 @@ Cast "${nextVotingLlm.name}"'s vote by outputting the required JSON object.`;
         eliminatedId: null,
         winner: null,
         configApiKey: gameState.configApiKey // Preserve the entered API key so they don't retype it
-      };
+      });
       res.end(JSON.stringify({ success: true }));
       return;
     }
